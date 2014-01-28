@@ -1,6 +1,5 @@
-﻿// This code is owned and copyrighted by ZBS Technology, LLC 2013
+// This code is owned and copyrighted by ZBS Technology, LLC 2013
 var timerUpdateSeconds = null;
-var validateControllerCount = 0;
 var controllerNetworks = null;
 var UserInfo = null;
 var Controllers = null;
@@ -9,13 +8,15 @@ var Controller = null;
 var nZoneSecondsRemaining = 0;
 var nScheduleSecondsRemaining = 0;
 var nRefreshCountdown = 0; // After we send a command we need to refresh the data until the last command status = "Received"
-var nRefreshRetryCount = 0; // Only refresh a max of 3 times until status = "Received"
+var nRefreshRetryCount = 0; // Only refresh a max of 10 times until status = "Received"
 
 var loginValidator;
 var registerValidator;
 var bInDataRefresh = false;
+var bInLogin = false;
 
 $(function () {
+
     loginValidator = $("#frmLogin").validate();
     registerValidator = $("#frmRegister").validate();
 
@@ -107,18 +108,79 @@ $(function () {
         }
     });
 
+/*
     $(window).hashchange(function () {
         var hash = location.hash;
-        if ((hash != "" && hash != "#pageWelcome" && hash != "#pageLogin" && hash != "#pageRegister" && hash != "#pageResetPassword" && hash != "#pageForgotPassword" && hash != "#pageConfiguredController") &&
-                (UserInfo === null || UserInfo.toString() == "undefined")) {
+        if ((hash != "" && hash != "#pageWelcome" && hash != "#pageLogin" && hash != "#pageRegister" && hash != "#pageResetPassword" && hash != "#pageForgotPassword") &&
+            (ValidData() == false)) {
             $.mobile.changePage("#pageWelcome");
             return;
         }
 
     });
     $(window).hashchange();
-
+*/
 });
+/*
+$(document).on('pageshow', function (event, ui) {
+    // Remove the previous page
+    $(ui.prevPage).remove();
+});
+*/
+function GetUser() {
+    // $.cookie("savedUser");
+    return localStorage.getItem("user");
+}
+
+function GetToken() {
+    return localStorage.getItem("token");
+}
+
+function SetUser(user) {
+    localStorage.setItem("user", user);
+}
+
+function SetToken(token) {
+    localStorage.setItem("token", token);
+}
+
+function ClearStorage() {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+}
+
+function ValidUser() {
+    var user = GetUser();
+    if (user == null || user == "") {
+        return false;
+    }
+    return true;
+}
+
+function ValidController() {
+    
+    if (ValidUser() == false)
+        return false;
+
+    if (!Controller || Controller === null) {
+        return false;
+    }
+    return true;
+}
+function ValidData() {
+    if (ValidUser() == false)
+        return false;
+
+    if (!UserInfo || UserInfo === null) {
+        return false;
+    }
+    return true;
+}
+
+function SetTemp() {
+    var t = $.cookie("savedPassword");
+    $.cookie("temp", t, { expires: 36000000, path: '/' });
+}
 
 
 function PauseOrPlay() {
@@ -136,24 +198,6 @@ function SendPauseCommand() {
 function SendPlayCommand() {
     $("#dlgPlay").popup("close");
     SendCommand("Start Controller", "cmd=unpause", false);
-}
-
-function IsControllerConfigured() {
-    var sNewController = $.cookie("controllerConfigured");
-    // If a controller has been configued then return true
-    if (sNewController !== undefined && sNewController != "") {
-        if (Controllers !== null) {
-            // Look for new controller
-            for (i = 0; i < Controllers.length; i++) {
-                if (Controllers[i].MACAddress == sNewController) {
-                    $.removeCookie("controllerConfigured", { path: '/' });
-                    $.mobile.changePage("#pageMain");
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
 }
 
 function RefreshControllers() {
@@ -371,6 +415,7 @@ function PageScheduleHistoryRefresh() {
 }
 
 function PageScheduleDetailRefresh() {
+
 }
 
 // Zone Detail Functions
@@ -439,8 +484,42 @@ function OpenConfirmRunScheduleDlg(ScheduleOffset) {
     $('#confirmRunSchedule').popup('open');
 }
 
+function RefreshWelcome() {
+    $('#divWelcome').empty();
+    var welcomeHTML = '';
+
+    if (ValidUser() == true && ValidData() == false) {
+        var savedUser = GetUser();
+        // Update welcome html
+        welcomeHTML = '<ul data-role="listview" data-inset="true" data-theme="c" data-dividertheme="b">' +
+                                '<li><h2 style="text-align: center">Welcome back ' + savedUser.toString() + '</h2></li></ul>';
+        $('#divWelcome').append(welcomeHTML).trigger('create');
+        // Set a timeout so the loading dialog is displayed
+        window.setTimeout("ReLogin()", 200);
+    }
+    else if (ValidUser() == true && ValidData() == true) {
+        $.mobile.changePage("#pageMain");
+    }
+    else {
+        welcomeHTML = '<ul data-role="listview" data-inset="true" data-theme="c" data-dividertheme="b">' +
+                          '<li><h2 style="text-align: center">Welcome to RainCommander</h2><p style="text-align: center; font-size: medium;">Login or Register to access your RainCommander controller</p></li>' +
+                          '</ul>' +
+		                  '<p><a href="#pageLogin" data-role="button" data-inline="true" data-theme="b">Login</a>' +
+		                  '<a href="#pageRegister" data-role="button" data-inline="true" data-theme="b">Register</a></p>';
+
+        $('#divWelcome').append(welcomeHTML).trigger('create');
+    }
+}
+function ReLogin() {
+    if (bInLogin)
+        return;
+    var savedToken = GetToken();
+    var savedUser = GetUser();
+    LoginWithToken(savedToken, savedUser, "Loading Data...");
+}
+
 function RefreshAccountInfo() {
-    var user = $.cookie("savedUser");
+    var user = GetUser();
 
     $('#lblCurrentUser').html(user);
     $('#lblNameOnAccount').html(UserInfo.FirstName + ' ' + UserInfo.LastName);
@@ -448,6 +527,39 @@ function RefreshAccountInfo() {
 
     // Update Address information
     $('#lblAccountAddress').html(GetAddressHTML(UserInfo));
+}
+
+function RefreshAccountAddress() {
+    $('#editAddress').val(UserInfo.Address);
+    $('#editCity').val(UserInfo.City);
+    $('#editState').val(UserInfo.State);
+    $('#editZip').val(UserInfo.Zip);
+}
+
+function RefreshControllerInfo() {
+    $('#txtControllerName').val(Controller.Name);
+
+    if (Controller.TimeZoneName == "Pacific")
+        $('select#selTimeZone')[0].selectedIndex = 0;
+    else if (Controller.TimeZoneName == "Arizona")
+        $('select#selTimeZone')[0].selectedIndex = 1;
+    else if (Controller.TimeZoneName == "Mountain")
+        $('select#selTimeZone')[0].selectedIndex = 2;
+    else if (Controller.TimeZoneName == "Central")
+        $('select#selTimeZone')[0].selectedIndex = 3;
+    else if (Controller.TimeZoneName == "Eastern")
+        $('select#selTimeZone')[0].selectedIndex = 4;
+    $('select#selTimeZone').selectmenu('refresh', true);
+
+    $('#liConfigureController').html(Controller.Name);
+    $('#lblConfigMAC').html('MAC Address: ' + Controller.MACAddress);
+    $('#lblConfigVersion').html('Version: ' + Controller.Version);
+
+}
+function RefreshContactInfo() {
+    $('#editFirstName').val(UserInfo.FirstName);
+    $('#editLastName').val(UserInfo.LastName);
+    $('#editPhone').val(UserInfo.Phone);
 }
 
 function ControllerChanged() {
@@ -491,7 +603,7 @@ function RefreshStatus() {
 
     if (Controller.Status == "Offline") {
         statusHTML += '<li><h3>This controller has lost connectivity with our server<h3/>';
-        statusHTML += '<p style="text-align: left; font-size: small;padding-left: 30px;">Click <a href="configure.htm">here</a> to reconnect</p></li>';
+        statusHTML += '<p style="text-align: left; font-size: small;padding-left: 30px;">Click <a href="configure.html">here</a> to reconnect</p></li>';
     }
     else {
         if (Controller.Paused == true) {
@@ -508,7 +620,7 @@ function RefreshStatus() {
                 var liString = '<li><fieldset class="ui-grid-a"><div class="ui-block-a"><h3>Running Schedule<h3/>';
                 liString += '<p>&nbsp;&nbsp;&nbsp;<strong>' + Controller.LastScheduleRun + '</strong></p>';
                 liString += '<p>&nbsp;&nbsp;&nbsp;<strong>Time Remaining ' + GetTimeString(nScheduleSecondsRemaining) + '</strong></p></div>';
-                liString += '<div class="ui-block-b"><a href="#" data-role="button" data-theme="none" data-corners="false" data-shadow="false" data-inline="true" onclick="SendCommand(\'Stop Schedule - ' + Controller.LastScheduleRun + '\', \'cmd=stop\', true)"><img id="imgStopZone" src="images/StopHand.png" alt="Stop" style="width: 50px; height: 50px" /></a></div></fieldset></li>';
+                liString += '<div class="ui-block-b"><a href="#" data-role="button" data-theme="none" data-corners="false" data-shadow="false" data-inline="true" onclick="SendCommand(\'Stop Schedule - ' + Controller.LastScheduleRun + '\', \'cmd=stop\', true)"><img id="imgStopZone" src="/images/StopHand.png" alt="Stop" style="width: 50px; height: 50px" /></a></div></fieldset></li>';
                 var $li = $(liString);
                 $li.find('#stopCmd').buttonMarkup({
                     icon: "delete"
@@ -528,7 +640,7 @@ function RefreshStatus() {
                     $("#lvStatus").append($li);
                 }
                 else {
-                    liString += '<div class="ui-block-b"><a href="#" data-role="button" data-theme="none" data-corners="false" data-shadow="false" data-inline="true" onclick="SendCommand(\'Stop Zone - ' + Controller.LastZoneRun + '\', \'cmd=stop\', true)"><img id="imgStopZone" src="images/StopHand.png" alt="Stop" style="width: 50px; height: 50px" /></a></div></fieldset></li>';
+                    liString += '<div class="ui-block-b"><a href="#" data-role="button" data-theme="none" data-corners="false" data-shadow="false" data-inline="true" onclick="SendCommand(\'Stop Zone - ' + Controller.LastZoneRun + '\', \'cmd=stop\', true)"><img id="imgStopZone" src="/images/StopHand.png" alt="Stop" style="width: 50px; height: 50px" /></a></div></fieldset></li>';
                     var $li = $(liString);
                     $li.find('#stopCmd').buttonMarkup({
                         icon: "delete"
@@ -611,7 +723,7 @@ function RefreshStatus() {
         if (Controller.CommandStatus == "PENDING" || Controller.CommandStatus == "SENT") {
             statusHTML += '<li><div class="ui-grid-a"><div class="ui-block-a"><h3>Last Activity<h3/>';
             statusHTML += '<p>&nbsp;&nbsp;&nbsp;<strong>' + Controller.CommandDescription + ' </strong> (' + Controller.CommandStatus + ')</p></div>';
-            statusHTML += '<div class="ui-block-b"><img src="images/refresh.gif" style="width: 32px; height: 32px; padding-left: 100px; padding-top: 25px;" /></div></div></li>';
+            statusHTML += '<div class="ui-block-b"><img src="/images/refresh.gif" style="width: 32px; height: 32px; padding-left: 100px; padding-top: 25px;" /></div></div></li>';
         }
         else {
             statusHTML += '<li><h3>Last Activity<h3/>';
@@ -629,6 +741,7 @@ function RefreshStatus() {
         //$('#lvStatus').listview('refresh');
     }
 }
+
 
 function ControllerTime() {
 
@@ -980,12 +1093,8 @@ function Logout() {
     $('#loginUsername').val("");
     $('#loginPassword').val("");
 
-    $.removeCookie("savedUser", { path: '/' });
-    $.removeCookie("savedPassword", { path: '/' });
-    $.removeCookie("controllerConfigured", { path: '/' });
-
-    $("#selZone").html("");
-    $("#selSchedule").html("");
+    ClearStorage();
+    document.location.href = "https://www.raincommander.com/Controller/default.htm";
 }
 
 
@@ -1005,7 +1114,7 @@ function LoginClick() {
     else if (txtUser.hasClass('error') || txtPassword.hasClass('error'))
         $('#lblLoginError').html('Please fix errors and try again');
     else {
-        Login(txtUser.val(), txtPassword.val(), "Loging In...");
+        Login(txtUser.val(), txtPassword.val(), "Logging In...");
         return true;
     }
 
@@ -1013,6 +1122,10 @@ function LoginClick() {
 }
 
 function Login(sNewUser, sNewPassword, sMessage) {
+    if (bInLogin)
+        return;
+    bInLogin = true;
+
     $.mobile.loading('show', {
         text: sMessage,
         textVisible: true,
@@ -1031,14 +1144,24 @@ function Login(sNewUser, sNewPassword, sMessage) {
         data: "{_Email:'" + sNewUser + "', _Password:'" + sNewPassword + "'}",
         contentType: "application/json; charset=utf-8",
         success: function (msg) {
+            bInLogin = false;
             $.mobile.loading('hide');
             if (msg.d.ReturnCode == 1) {
 
-                $.cookie("savedUser", sNewUser, { expires: 10000, path: '/' });
-                $.cookie("savedPassword", sNewPassword, { expires: 10000, path: '/' });
+                var date = new Date();
+                var days = 10000;
+                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+
+                //$.cookie("savedUser", sNewUser, { expires: date, path: '/' });
+                //$.cookie("savedPassword", sNewPassword, { expires: date, path: '/' });
 
                 Controllers = msg.d.Data.Controllers;
                 UserInfo = msg.d.Data;
+
+                // Save the user and token
+                SetUser(sNewUser);
+                SetToken(UserInfo.Token);
+
                 if (Controllers === null || Controllers.length == 0 || Controllers[0] === null) {
                     $.mobile.changePage("#pageNoControllers");
                 }
@@ -1050,11 +1173,64 @@ function Login(sNewUser, sNewPassword, sMessage) {
             }
             else {
                 $('#lblLoginError').html("Error: " + msg.d.Status);
-                $.removeCookie("savedUser", { path: '/' });
-                $.removeCookie("savedPassword", { path: '/' });
+                ClearStorage();
             }
         },
         error: function (e) {
+            bInLogin = false;
+            $.mobile.loading('hide');
+            $('#lblLoginError').html("Error: " + e.statusText.toString());
+            return false;
+        }
+    });
+}
+function LoginWithToken(sToken, sUser, sMessage) {
+    if (bInLogin)
+        return;
+    bInLogin = true;
+
+    $.mobile.loading('show', {
+        text: sMessage,
+        textVisible: true,
+        theme: "a" || $.mobile.loader.prototype.options.theme,
+        textonly: false,
+        html: ""
+    });
+
+    var url = "https://raincommander.com/Controller/wsCmd.asmx/LoginWithToken" + '?nocache=' + new Date().getTime();
+
+    $.ajax({
+        url: url,
+        cache: false,
+        type: "POST",
+        dataType: "json",
+        data: "{_Email:'" + sUser + "', _Token:'" + sToken + "'}",
+        contentType: "application/json; charset=utf-8",
+        success: function (msg) {
+            bInLogin = false;
+            $.mobile.loading('hide');
+            if (msg.d.ReturnCode == 1) {
+
+                Controllers = msg.d.Data.Controllers;
+                UserInfo = msg.d.Data;
+
+                if (Controllers === null || Controllers.length == 0 || Controllers[0] === null) {
+                    $.mobile.changePage("#pageNoControllers");
+                }
+                else {
+                    RefreshControllers();
+                    $.mobile.changePage("#pageMain");
+                }
+
+            }
+            else {
+                $('#lblLoginError').html("Error: " + msg.d.Status);
+                ClearStorage();
+                $.mobile.changePage("#pageLogin");
+            }
+        },
+        error: function (e) {
+            bInLogin = false;
             $.mobile.loading('hide');
             $('#lblLoginError').html("Error: " + e.statusText.toString());
             return false;
@@ -1116,15 +1292,15 @@ function SaveContact() {
     var sFirstName = $('#editFirstName').val();
     var sLastName = $('#editLastName').val();
     var sPhone = $('#editPhone').val();
-    var user = $.cookie("savedUser");
-    var password = $.cookie("savedPassword");
+    var user = GetUser();
+    var token = GetToken();
 
     $.ajax({
         url: "https://raincommander.com/Controller/wsCmd.asmx/SaveContact",
         cache: false,
         type: "POST",
         dataType: "json",
-        data: "{_Email:'" + user + "', _Password:'" + password + "', _FirstName:'" + sFirstName + "', _LastName:'" + sLastName + "', _Phone:'" + sPhone + "'}",
+        data: "{_Email:'" + user + "', _Token:'" + token + "', _FirstName:'" + sFirstName + "', _LastName:'" + sLastName + "', _Phone:'" + sPhone + "'}",
         contentType: "application/json; charset=utf-8",
         success: function (msg) {
             $.mobile.loading('hide');
@@ -1156,8 +1332,8 @@ function SaveAccountAddress() {
         html: ""
     });
 
-    var user = $.cookie("savedUser");
-    var password = $.cookie("savedPassword");
+    var user = GetUser();
+    var token = GetToken();
 
     var sAddress = $('#editAddress').val();
     var sCity = $('#editCity').val();
@@ -1169,7 +1345,7 @@ function SaveAccountAddress() {
         cache: false,
         type: "POST",
         dataType: "json",
-        data: "{_Email:'" + user + "', _Password:'" + password + "', _Address:'" + sAddress + "', _City:'" + sCity + "', _State:'" + sState + "', _Zip:'" + sZip + "'}",
+        data: "{_Email:'" + user + "', _Token:'" + token + "', _Address:'" + sAddress + "', _City:'" + sCity + "', _State:'" + sState + "', _Zip:'" + sZip + "'}",
         contentType: "application/json; charset=utf-8",
         success: function (msg) {
             $.mobile.loading('hide');
@@ -1208,9 +1384,9 @@ function ChangePasswordClick() {
         $('#lblChangePasswordError').html("New passwords do not match");
         return;
     }
-    ChangePassword(sNewPassword);
+    ChangePassword(sCurrentPassword, sNewPassword);
 }
-function ChangePassword(sNewPassword) {
+function ChangePassword(sCurrentPassword, sNewPassword) {
     $.mobile.loading('show', {
         text: "Changing Password...",
         textVisible: true,
@@ -1219,22 +1395,19 @@ function ChangePassword(sNewPassword) {
         html: ""
     });
 
-    var user = $.cookie("savedUser");
-    var password = $.cookie("savedPassword");
+    var user = GetUser();
 
     $.ajax({
         url: "https://raincommander.com/Controller/wsCmd.asmx/ChangePassword",
         cache: false,
         type: "POST",
         dataType: "json",
-        data: "{_Email:'" + user + "', _Password:'" + password + "', _NewPassword:'" + sNewPassword + "'}",
+        data: "{_Email:'" + user + "', _Password:'" + sCurrentPassword + "', _NewPassword:'" + sNewPassword + "'}",
         contentType: "application/json; charset=utf-8",
         success: function (msg) {
             $.mobile.loading('hide');
             if (msg.d.ReturnCode == 1) {
-                password = sNewPassword;
-                // Add to storage
-                $.cookie("savedPassword", sNewPassword, { expires: 10000, path: '/' });
+                Login(user, sNewPassword, "Logging in");
             }
             else {
                 $('#lblChangePasswordError').html("Error: " + msg.d.Status);
@@ -1307,8 +1480,8 @@ function Register() {
         success: function (msg) {
             $.mobile.loading('hide');
             if (msg.d.ReturnCode == 1) {
-                $.cookie("savedUser", sNewUser, { expires: 10000, path: '/' });
-                $.cookie("savedPassword", sNewPassword, { expires: 10000, path: '/' });
+                SetUser(sNewUser);
+                SetToken(sNewPassword);
 
                 Controllers = null;
                 RefreshData(true);
@@ -1343,10 +1516,11 @@ function RefreshData(displayLoader) {
         });
     }
 
-    var user = $.cookie("savedUser");
-    var password = $.cookie("savedPassword");
-    var url = "https://raincommander.com/Controller/wsCmd.asmx/ValidUser" + '?nocache=' + new Date().getTime();
-    var sRefreshData = "{_Email:'" + user + "', _Password:'" + password + "'}";
+    var user = GetUser();
+    var token = GetToken();
+
+    var url = "https://raincommander.com/Controller/wsCmd.asmx/RCData" + '?nocache=' + new Date().getTime();
+    var sRefreshData = "{_Email:'" + user + "', _Token:'" + token + "'}";
 
     $.ajax({
         url: url,
@@ -1381,41 +1555,6 @@ function RefreshData(displayLoader) {
     });
 }
 
-function LookForController() {
-    var user = $.cookie("savedUser");
-    var password = $.cookie("savedPassword");
-    var url = "https://raincommander.com/Controller/wsCmd.asmx/ValidUser" + '?nocache=' + new Date().getTime();
-    var sRefreshData = "{_Email:'" + user + "', _Password:'" + password + "'}";
-
-    validateControllerCount++;
-
-    $.ajax({
-        url: url,
-        cache: false,
-        type: "POST",
-        dataType: "json",
-        data: sRefreshData,
-        contentType: "application/json; charset=utf-8",
-        success: function (msg) {
-            if (msg.d.ReturnCode == 1) {
-                UserInfo = msg.d.Data;
-                Controllers = msg.d.Data.Controllers;
-                if (IsControllerConfigured())
-                    $.mobile.changePage("#pageMain");
-                else if (validateControllerCount < 10)
-                    window.setTimeout("LookForController()", 2000);
-            }
-            else {
-                $('#lblConfigureError').html("Error: " + msg.d.Status);
-            }
-        },
-        error: function (e) {
-            $('#lblConfigureError').val = "Error: " + e.statusText.toString();
-            return false;
-        }
-    });
-}
-
 
 function SendCommand(desc, cmd, showMainOnSuccess) {
     if (Controller == null) {
@@ -1433,8 +1572,9 @@ function SendCommand(desc, cmd, showMainOnSuccess) {
     });
     var url = "https://raincommander.com/Controller/wsCmd.asmx/SendCommand" + '?nocache=' + new Date().getTime();
 
-    var user = $.cookie("savedUser");
-    var password = $.cookie("savedPassword");
+    var user = GetUser();
+    var password = GetToken();
+
     var sData = "{ _Email:'" + user + "', _Password:'" + password + "', _ControllerID:'" + Controller.ControllerID.toString() + "', _Desc:'" + desc + "', _Cmd:'" + cmd + "'}";
     $.ajax({
         url: url,
@@ -1446,7 +1586,7 @@ function SendCommand(desc, cmd, showMainOnSuccess) {
         success: function (msg) {
             $.mobile.loading('hide');
             nRefreshCountdown = 5;
-            nRefreshRetryCount = 3;
+            nRefreshRetryCount = 10;
             if (msg.d.ReturnCode != 1) {
                 Controller.CommandStatus = "ERROR";
                 Controller.CommandDescription = msg.d.Status;
