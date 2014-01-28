@@ -20,6 +20,131 @@
 	
 </head> 
 
+<script language="JavaScript">
+
+jQuery('div').live('pagehide', function(event, ui){
+ 	var page = jQuery(event.target);
+	alert("From PageHide - target = " + event.target.id);
+	page.remove();
+});
+
+
+    $(document).on("pageinit", pageInit);
+    function pageInit(event) {
+        //alert("From Init - target = " + event.target.id);
+        if (event.target.id != "pageWelcome" && event.target.id != "pageLogin" && event.target.id != "pageRegister") {
+            if (ValidUser() == false || (ValidUser() == true && ValidData() == false)) {
+                document.location.href = "https://www.raincommander.com/Controller/default.htm";
+                //$.mobile.changePage("#pageWelcome");
+                //    event.preventDefault();
+                return;
+            }
+        }
+        if (event.target.id == "pageWelcome") {
+            RefreshWelcome();
+        }
+    }
+
+    $(document).on('pagebeforeshow', function (event, ui) {
+        if (event.target.id != "pageWelcome" && event.target.id != "pageLogin" && event.target.id != "pageRegister") {
+            if (ValidUser() == false || (ValidUser() == true && ValidData() == false)) {
+                $.mobile.changePage("#pageWelcome");
+                return;
+            }
+
+            if (event.target.id == "pageMain") {
+                // Set up the timer
+                if (timerUpdateSeconds != null) {
+                    clearInterval(timerUpdateSeconds);
+                    timerUpdateSeconds = null;
+                }
+                RefreshStatus();
+
+                // Set up a timer to refresh seconds if we have valid schedule or zone seconds
+                timerUpdateSeconds = setInterval(MainPageSecondTimer, 1000);
+            }
+            else if (event.target.id == "pageLogin") {
+                $('#lblLoginError').html("");
+                $('#loginUsername').val("");
+                $('#loginPassword').val("");
+
+                //ResetPasswordRequest = 0;
+                loginValidator.resetForm();
+            }
+            else if (event.target.id == "pageForgotPassword") {
+                $('#lblForgotPasswordError').html("");
+                $('#forgotUsername').html("");
+                $('#forgotUsername').textinput('enable');
+                $('#requestButton').removeClass('ui-disabled');
+            }
+            else if (event.target.id == "pageRegister") {
+                $('#lblRegisterError').html("");
+                $('#regUsername').val('');
+                $('#regPassword').val('');
+                $('#regFirstName').val('');
+                $('#regLastName').val('');
+                $('#regPhone').val('');
+                $('#regAddress').val('');
+                $('#regCity').val('');
+                $('#regState').val('');
+                $('#regZip').val('');
+
+                registerValidator.resetForm();
+            }
+            else if (event.target.id == "pageConfigureZones") {
+                PageConfigureZoneRefresh();
+            }
+            else if (event.target.id == "pageConfigureSchedules") {
+                PageConfigureScheduleRefresh();
+            }
+            else if (event.target.id == "pageHistory") {
+                PageScheduleHistoryRefresh();
+            }
+            else if (event.target.id == "pageScheduleDetail") {
+                PageScheduleDetailRefresh();
+            }
+            else if (event.target.id == "pageRun") {
+                PageRunRefresh();
+            }
+            else if (event.target.id == "pageConfigureAccount") {
+                RefreshAccountInfo();
+            }
+            else if (event.target.id == "pageConfigureController") {
+                RefreshControllerInfo();
+            }
+            else if (event.target.id == "pageEditContact") {
+                RefreshContactInfo();
+            }
+            else if (event.target.id == "pageEditAccountAddress") {
+                RefreshAccountAddress();
+            }
+        }
+        if (event.target.id == "pageWelcome") {
+            RefreshWelcome();
+        }
+    });
+    $("#dlgEditAccountAddress").on("popupafteropen",
+        function (event, ui) {
+        }
+    );
+
+
+    $(document).on("pagehide", "#pageMain", function (event, ui) {
+        if (timerUpdateSeconds != null) {
+            clearInterval(timerUpdateSeconds);
+            timerUpdateSeconds = null;
+        }
+    });
+    
+    function LoadConfig() {
+        $.cookie("savedUser", GetUser(), { expires: 10000, path: '/' });
+        $.cookie("savedPassword", GetToken(), { expires: 10000, path: '/' });
+        document.location.href = "http://www.raincommander.com/Controller/configure.htm";
+    }
+
+</script>
+
+
 <body>
 <div data-role="page" id="pageWelcome">
     <img src="images/Grass_Sky.jpg" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px;" />
@@ -28,12 +153,14 @@
 	</div>
 
 	<div id="divWelcome" class="content" data-role="content" align="center">
-        <ul data-role="listview" data-inset="true" data-theme="c" data-dividertheme="b">
-            <li><h2 style="text-align: center">Welcome to RainCommander</h2><p style="text-align: center; font-size: medium;">Login or Register to access your RainCommander controller</p></li>
-        </ul> 
+        <div class="ui-body ui-body-a ui-corner-all" >
+            <h2 style="text-align: center">Welcome to RainCommander</h2>
+            <p style="text-align: center; font-size: medium;"><div class="no-ellipses">Login or Register to access your RainCommander controller</div></p>
+        </div> 
 		<p>
-        <a href="#" data-role="button" data-inline="true" data-theme="b">Login</a>
-		<a href="#pageRegister" data-role="button" data-inline="true" data-theme="b">Register</a></p>
+        <a href="#pageLogin" data-role="button" data-inline="true" data-theme="b">Login</a>
+		<a href="#pageRegister" data-role="button" data-inline="true" data-theme="b">Register</a>
+		</p>
 	</div>
 
 </div>
@@ -615,6 +742,10 @@
 
 <script>
     //var ResetPasswordRequest = 0;
+	jQuery('div').live('pagehide', function(event, ui){
+  		var page = jQuery(event.target);
+    	page.remove();
+	});
 
     $("#pageWelcome").bind({
         pagebeforeshow : function (event, ui) 
