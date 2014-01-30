@@ -16,26 +16,264 @@
 </head> 
 
 <script>
+var bInLogin = false;
+var UserInfo = null;
+var Controllers = null;
+
+
+    $(document).on("pageinit", pageInit);
+    function pageInit(event) {
+		alert(event.target.id);
+        if (event.target.id == "pageWelcome") {
+            RefreshWelcome();
+        }
+    }
+
 	var timerUpdateSeconds = null;
-    $(document).on('pagebeforeshow', function (event, ui) {
+    $(document).on('pagebeforeshow', pageBeforeShow);
+    function pageBeforeShow() {
         if (timerUpdateSeconds == null) {
             timerUpdateSeconds = setInterval(MainPageSecondTimer, 1000);
         }
+        if (event.target.id == "pageWelcome") {
+            RefreshWelcome();
+        }
+    }
+
+function GoToWelcome() {
+	RefreshWelcome();
+    $.mobile.changePage("#pageWelcome", { transition: "none" });
+}
+
+function RefreshWelcome() {
+    $('#divWelcome').empty();
+    var welcomeHTML = '';
+    
+    welcomeHTML = '<ul data-role="listview" data-inset="true" data-theme="c" data-dividertheme="b">' +
+                          '<li><h2 style="text-align: center">Welcome to RainCommander</h2><p style="text-align: center; font-size: medium;">Login or Register to access your RainCommander controller</p></li>';
+                          
+	alert(GetUser());
+	
+	if (ValidUser()) {
+		welcomeHTML += '<li><h2 style="text-align: center">User: ' + GetUser() + '</h2></li>';
+	}	                          
+                           
+    welcomeHTML += '</ul>';
+    
+	welcomeHTML += '<p><a href="#pageLogin" data-role="button" data-inline="true" data-theme="b">Login</a>' +
+		                  '<a href="#pageRegister" data-role="button" data-inline="true" data-theme="b">Register</a>' + 
+		                  '<a href="#" onclick="Logout()" data-role="button" data-inline="true" data-theme="b">Logout</a>' + 
+		                  '<a href="#pageMain" data-role="button" data-inline="true" data-theme="b" data-transition="none">Main</a></p>';
+    
+    $('#divWelcome').append(welcomeHTML).trigger('create');
+}
+
+function Logout() {
+    $('#loginUsername').val("");
+    $('#loginPassword').val("");
+
+    ClearStorage();
+    $.mobile.changePage("#pageWelcome");
+}
+
+function LoginClick() {
+    $('#lblLoginError').html('');
+
+	Login('guest@raincommander.com', 'rcguest', "Logging In...");
+}
+
+function Login(sNewUser, sNewPassword, sMessage) {
+    if (bInLogin)
+        return;
+    bInLogin = true;
+
+    $.mobile.loading('show', {
+        text: sMessage,
+        textVisible: true,
+        theme: "a" || $.mobile.loader.prototype.options.theme,
+        textonly: false,
+        html: ""
     });
+
+    var url = "https://www.raincommander.com/Controller/wsCmd.asmx/ValidUser" + '?nocache=' + new Date().getTime();
+
+    $.ajax({
+        url: url,
+        cache: false,
+        type: "POST",
+        dataType: "json",
+        data: "{_Email:'" + sNewUser + "', _Password:'" + sNewPassword + "'}",
+        contentType: "application/json; charset=utf-8",
+        success: function (msg) {
+            bInLogin = false;
+            $.mobile.loading('hide');
+            if (msg.d.ReturnCode == 1) {
+
+                Controllers = msg.d.Data.Controllers;
+                UserInfo = msg.d.Data;
+
+                // Save the user and token
+                SetUser(sNewUser);
+                SetToken(UserInfo.Token);
+
+                if (Controllers === null || Controllers.length == 0 || Controllers[0] === null) {
+                    $.mobile.changePage("#pageNoControllers");
+                }
+                else {
+                    RefreshControllers();
+                    $.mobile.changePage("#pageMain");
+                }
+
+            }
+            else {
+                $('#lblLoginError').html("Error: " + msg.d.Status);
+                ClearStorage();
+            }
+        },
+        error: function (e) {
+            bInLogin = false;
+            $.mobile.loading('hide');
+            $('#lblLoginError').html("Error: " + e.statusText.toString());
+            return false;
+        }
+    });
+}
+function ReLogin() {
+    if (bInLogin)
+        return;
+    var savedToken = GetToken();
+    var savedUser = GetUser();
+    LoginWithToken(savedToken, savedUser, "Loading Data...");
+}
+
+function LoginWithToken(sToken, sUser, sMessage) {
+    if (bInLogin)
+        return;
+    bInLogin = true;
+
+    $.mobile.loading('show', {
+        text: sMessage,
+        textVisible: true,
+        theme: "a" || $.mobile.loader.prototype.options.theme,
+        textonly: false,
+        html: ""
+    });
+
+    var url = "https://www.raincommander.com/Controller/wsCmd.asmx/LoginWithToken" + '?nocache=' + new Date().getTime();
+
+    $.ajax({
+        url: url,
+        cache: false,
+        type: "POST",
+        dataType: "json",
+        data: "{_Email:'" + sUser + "', _Token:'" + sToken + "'}",
+        contentType: "application/json; charset=utf-8",
+        success: function (msg) {
+            bInLogin = false;
+            $.mobile.loading('hide');
+            if (msg.d.ReturnCode == 1) {
+
+                Controllers = msg.d.Data.Controllers;
+                UserInfo = msg.d.Data;
+
+                if (Controllers === null || Controllers.length == 0 || Controllers[0] === null) {
+                    $.mobile.changePage("#pageNoControllers");
+                }
+                else {
+                    RefreshControllers();
+                    $.mobile.changePage("#pageMain");
+                }
+
+            }
+            else {
+                $('#lblLoginError').html("Error: " + msg.d.Status);
+                ClearStorage();
+                $.mobile.changePage("#pageLogin");
+            }
+        },
+        error: function (e) {
+            bInLogin = false;
+            $.mobile.loading('hide');
+            $('#lblLoginError').html("Error: " + e.statusText.toString());
+            return false;
+        }
+    });
+}
+
+function RefreshControllers() {
+}
 
 function MainPageSecondTimer() {
 
     // Add Time
     $('#divStatus').empty();
 
+
     var statusHTML = '<ul data-role="listview" data-inset="true" data-theme="c" data-dividertheme="b">';
     statusHTML += '<li><h3>Current Time<h3/>';
     var d = new Date();
-    statusHTML = statusHTML + d.toLocaleString() + '</li></ul>';
+    statusHTML += d.toLocaleString() + '</li>';
+
+    var i;
+    for (i = 0; i < Controllers.length; i++ ) {
+        statusHTML += '<li>'  + Controllers[i].MACAddress + '</li>';
+    }
+	statusHTML += '</ul>';
     
     $('#divStatus').append(statusHTML).trigger('create');
     
 }
+
+function GetUser() {
+    // $.cookie("savedUser");
+    return localStorage.getItem("user");
+}
+
+function GetToken() {
+    return localStorage.getItem("token");
+}
+
+function SetUser(user) {
+    localStorage.setItem("user", user);
+}
+
+function SetToken(token) {
+    localStorage.setItem("token", token);
+}
+
+function ClearStorage() {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+}
+
+function ValidUser() {
+    var user = GetUser();
+    if (user == null || user == "") {
+        return false;
+    }
+    return true;
+}
+
+function ValidController() {
+    
+    if (ValidUser() == false)
+        return false;
+
+    if (!Controller || Controller === null) {
+        return false;
+    }
+    return true;
+}
+function ValidData() {
+    if (ValidUser() == false)
+        return false;
+
+    if (!UserInfo || UserInfo === null) {
+        return false;
+    }
+    return true;
+}
+
 
 </script>
 
@@ -142,6 +380,33 @@ function MainPageSecondTimer() {
     </div>
 </div>
 
+<div data-role="page" id="pageNoControllers" data-theme="b">
+    <img src="/Controller/images/Grass_Sky.jpg" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px;" />
+	<div data-role="header" data-theme="b" data-position="fixed">
+        <a href="default.htm#pageMain" data-theme="a" class="ui-btn-left" data-icon="home" data-iconpos="notext">Home</a>
+		<div style="text-align: center"><a href="default.htm"><img src="/Controller/images/RC_Logo_Words.png" class="classHeaderLogo" /></a></div>
+	</div>
+
+	<div class="content" data-role="content">
+        <div id="div3" >
+            <p></p>
+            <ul id="Ul2" data-role="listview" data-inset="true" data-theme="c" data-dividertheme="b">
+                <li><h2 style="text-align: center">You are now ready to set up a RainCommander controller</h2>
+                <p></p>
+		        <p style="text-align: center; font-size: medium;">
+    				<a id="aGetStarted" target="_self" data-role="button" data-inline="true" data-theme="b" onclick="LoadConfig()">Set up</a>
+	    			<a id="aLogout" target="_self" data-role="button" data-inline="true" data-theme="b" onclick="Logout()">Logout</a>			
+		    	</p></li>
+            </ul> 
+        </div>
+	</div>
+	<div data-role="footer" data-position="fixed" data-theme="b" class="ui-bar">
+		<div style="margin: 4px; text-align: center">
+            <img src="/Controller/images/RC_Logo_Water.png" class="classFooterLogo" />
+        </div>
+	</div>
+</div>
+
 <div data-role="page" id="pageMain" data-theme="b">
     <img src="images/Grass_Sky.jpg" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px;" />
 	<div data-role="header" data-theme="b" data-position="fixed">
@@ -158,6 +423,7 @@ function MainPageSecondTimer() {
             <a href="#pageConfigureController" data-role="button" data-inline="true" >Configure</a>
             <a href="#pageRun" data-role="button" data-inline="true">Make It Rain!</a>
             <a href="#pageHistory" data-role="button" data-inline="true">History</a>
+            <a href="#" onclick="GoToWelcome()" data-role="button" data-inline="true">Welcome</a>
         </div>
 	</div>
 
