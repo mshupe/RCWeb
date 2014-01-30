@@ -1,4 +1,4 @@
-// This code is owned and copyrighted by ZBS Technology, LLC 2013
+﻿// This code is owned and copyrighted by ZBS Technology, LLC 2013
 var timerUpdateSeconds = null;
 var controllerNetworks = null;
 var UserInfo = null;
