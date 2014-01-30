@@ -23,7 +23,6 @@ var Controllers = null;
 
     $(document).on("pageinit", pageInit);
     function pageInit(event) {
-		alert(event.target.id);
         if (event.target.id == "pageWelcome") {
             RefreshWelcome();
         }
@@ -52,8 +51,6 @@ function RefreshWelcome() {
     welcomeHTML = '<ul data-role="listview" data-inset="true" data-theme="c" data-dividertheme="b">' +
                           '<li><h2 style="text-align: center">Welcome to RainCommander</h2><p style="text-align: center; font-size: medium;">Login or Register to access your RainCommander controller</p></li>';
                           
-	alert(GetUser());
-	
 	if (ValidUser()) {
 		welcomeHTML += '<li><h2 style="text-align: center">User: ' + GetUser() + '</h2></li>';
 	}	                          
