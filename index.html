@@ -1,310 +1,223 @@
-<!DOCTYPE html> 
+﻿<!DOCTYPE html> 
 <html>
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1"> 
 	<title>Rain Commander</title> 
+	<link rel="stylesheet" href="Controller/styles/jquery.mobile-1.2.0.css" />
+    <link href="Controller/styles/mobiscroll.datetime-2.4.1.min.css" rel="stylesheet" type="text/css" />
+    <link href="Controller/styles/RC.css" rel="stylesheet" type="text/css" />
 
-	<link rel="stylesheet" href="mobile1-4/RC1-4Style.css" />
-	<link rel="stylesheet" href="mobile1-4/jquery.mobile.icons.min.css" />
-	<link rel="stylesheet" href="mobile1-4/jquery.mobile.structure-1.4.0.css" />
-	<link rel="stylesheet" href="styles/RC.css" />
-		
-	<script src="mobile1-4/jquery-1.10.2.min.js"></script>
-	<script src="mobile1-4/jquery.mobile-1.4.0.js"></script>
+    <script src="Controller/js/json2.js"></script>
+    <script src="Controller/js/jquery.js"></script>
+    <script src="Controller/js/jquery.mobile-1.2.0.js"></script>
+    <script src="Controller/js/jquery.cookie.js"></script>
+    <script src="Controller/js/jquery.validate.js"></script>
+    <script src="Controller/js/additional-methods.js"></script>
+    <script src="Controller/js/controller.js"></script>
+	<script src="Controller/js/mobiscroll.datetime-2.4.1.min.js" type="text/javascript"></script>
 	
 </head> 
 
-<script>
-var bInLogin = false;
-var UserInfo = null;
-var Controllers = null;
-
+<script language="JavaScript">
 
     $(document).on("pageinit", pageInit);
     function pageInit(event) {
+        //alert("From Init - target = " + event.target.id);
+        if (event.target.id != "pageWelcome" && event.target.id != "pageLogin" && event.target.id != "pageRegister" && event.target.id != "pageForgotPassword") {
+            if (ValidUser() == false || (ValidUser() == true && ValidData() == false)) {
+                document.location.href = "index.html";
+                //$.mobile.changePage("#pageWelcome");
+                //    event.preventDefault();
+                return;
+            }
+        }
         if (event.target.id == "pageWelcome") {
             RefreshWelcome();
         }
     }
 
-	var timerUpdateSeconds = null;
-    $(document).on('pagebeforeshow', pageBeforeShow);
-    function pageBeforeShow() {
-        if (timerUpdateSeconds == null) {
-            timerUpdateSeconds = setInterval(MainPageSecondTimer, 1000);
+    $(document).on('pagebeforeshow', function (event, ui) {
+        if (event.target.id != "pageWelcome" && event.target.id != "pageLogin" && event.target.id != "pageRegister" && event.target.id != "pageForgotPassword") {
+            if (ValidUser() == false || (ValidUser() == true && ValidData() == false)) {
+                $.mobile.changePage("#pageWelcome");
+                return;
+            }
+
+            if (event.target.id == "pageMain") {
+                // Set up the timer
+                if (timerUpdateSeconds != null) {
+                    clearInterval(timerUpdateSeconds);
+                    timerUpdateSeconds = null;
+                }
+                RefreshStatus();
+
+                // Set up a timer to refresh seconds if we have valid schedule or zone seconds
+                timerUpdateSeconds = setInterval(MainPageSecondTimer, 1000);
+            }
+            else if (event.target.id == "pageLogin") {
+                $('#lblLoginError').html("");
+                $('#loginUsername').val("");
+                $('#loginPassword').val("");
+
+                //ResetPasswordRequest = 0;
+                loginValidator.resetForm();
+            }
+            else if (event.target.id == "pageForgotPassword") {
+                $('#lblForgotPasswordError').html("");
+                $('#forgotUsername').html("");
+                $('#forgotUsername').textinput('enable');
+                $('#requestButton').removeClass('ui-disabled');
+            }
+            else if (event.target.id == "pageRegister") {
+                $('#lblRegisterError').html("");
+                $('#regUsername').val('');
+                $('#regPassword').val('');
+                $('#regFirstName').val('');
+                $('#regLastName').val('');
+                $('#regPhone').val('');
+                $('#regAddress').val('');
+                $('#regCity').val('');
+                $('#regState').val('');
+                $('#regZip').val('');
+
+                registerValidator.resetForm();
+            }
+            else if (event.target.id == "pageConfigureZones") {
+                PageConfigureZoneRefresh();
+            }
+            else if (event.target.id == "pageConfigureSchedules") {
+                PageConfigureScheduleRefresh();
+            }
+            else if (event.target.id == "pageHistory") {
+                PageScheduleHistoryRefresh();
+            }
+            else if (event.target.id == "pageScheduleDetail") {
+                PageScheduleDetailRefresh();
+            }
+            else if (event.target.id == "pageRun") {
+                PageRunRefresh();
+            }
+            else if (event.target.id == "pageConfigureAccount") {
+                RefreshAccountInfo();
+            }
+            else if (event.target.id == "pageConfigureController") {
+                RefreshControllerInfo();
+            }
+            else if (event.target.id == "pageEditContact") {
+                RefreshContactInfo();
+            }
+            else if (event.target.id == "pageEditAccountAddress") {
+                RefreshAccountAddress();
+            }
         }
         if (event.target.id == "pageWelcome") {
             RefreshWelcome();
         }
-    }
-
-function GoToWelcome() {
-	RefreshWelcome();
-    $.mobile.changePage("#pageWelcome", { transition: "none" });
-}
-
-function RefreshWelcome() {
-    $('#divWelcome').empty();
-    var welcomeHTML = '';
-    
-    welcomeHTML = '<ul data-role="listview" data-inset="true" data-theme="c" data-dividertheme="b">' +
-                          '<li><h2 style="text-align: center">Welcome to RainCommander</h2><p style="text-align: center; font-size: medium;">Login or Register to access your RainCommander controller</p></li>';
-                          
-	if (ValidUser()) {
-		welcomeHTML += '<li><h2 style="text-align: center">User: ' + GetUser() + '</h2></li>';
-	}	                          
-                           
-    welcomeHTML += '</ul>';
-    
-	welcomeHTML += '<p><a href="#pageLogin" data-role="button" data-inline="true" data-theme="b">Login</a>' +
-		                  '<a href="#pageRegister" data-role="button" data-inline="true" data-theme="b">Register</a>' + 
-		                  '<a href="#" onclick="Logout()" data-role="button" data-inline="true" data-theme="b">Logout</a>' + 
-		                  '<a href="#pageMain" data-role="button" data-inline="true" data-theme="b" data-transition="none">Main</a></p>';
-    
-    $('#divWelcome').append(welcomeHTML).trigger('create');
-}
-
-function Logout() {
-    $('#loginUsername').val("");
-    $('#loginPassword').val("");
-
-    ClearStorage();
-    $.mobile.changePage("#pageWelcome");
-}
-
-function LoginClick() {
-    $('#lblLoginError').html('');
-
-	Login('guest@raincommander.com', 'rcguest', "Logging In...");
-}
-
-function Login(sNewUser, sNewPassword, sMessage) {
-    if (bInLogin)
-        return;
-    bInLogin = true;
-
-    $.mobile.loading('show', {
-        text: sMessage,
-        textVisible: true,
-        theme: "a" || $.mobile.loader.prototype.options.theme,
-        textonly: false,
-        html: ""
     });
+    $("#dlgEditAccountAddress").on("popupafteropen",
+        function (event, ui) {
+        }
+    );
 
-    var url = "https://www.raincommander.com/Controller/wsCmd.asmx/ValidUser" + '?nocache=' + new Date().getTime();
 
-    $.ajax({
-        url: url,
-        cache: false,
-        type: "POST",
-        dataType: "json",
-        data: "{_Email:'" + sNewUser + "', _Password:'" + sNewPassword + "'}",
-        contentType: "application/json; charset=utf-8",
-        success: function (msg) {
-            bInLogin = false;
-            $.mobile.loading('hide');
-            if (msg.d.ReturnCode == 1) {
-
-                Controllers = msg.d.Data.Controllers;
-                UserInfo = msg.d.Data;
-
-                // Save the user and token
-                SetUser(sNewUser);
-                SetToken(UserInfo.Token);
-
-                if (Controllers === null || Controllers.length == 0 || Controllers[0] === null) {
-                    $.mobile.changePage("#pageNoControllers");
-                }
-                else {
-                    RefreshControllers();
-                    $.mobile.changePage("#pageMain");
-                }
-
-            }
-            else {
-                $('#lblLoginError').html("Error: " + msg.d.Status);
-                ClearStorage();
-            }
-        },
-        error: function (e) {
-            bInLogin = false;
-            $.mobile.loading('hide');
-            $('#lblLoginError').html("Error: " + e.statusText.toString());
-            return false;
+    $(document).on("pagehide", "#pageMain", function (event, ui) {
+        if (timerUpdateSeconds != null) {
+            clearInterval(timerUpdateSeconds);
+            timerUpdateSeconds = null;
         }
     });
-}
-function ReLogin() {
-    if (bInLogin)
-        return;
-    var savedToken = GetToken();
-    var savedUser = GetUser();
-    LoginWithToken(savedToken, savedUser, "Loading Data...");
-}
-
-function LoginWithToken(sToken, sUser, sMessage) {
-    if (bInLogin)
-        return;
-    bInLogin = true;
-
-    $.mobile.loading('show', {
-        text: sMessage,
-        textVisible: true,
-        theme: "a" || $.mobile.loader.prototype.options.theme,
-        textonly: false,
-        html: ""
-    });
-
-    var url = "https://www.raincommander.com/Controller/wsCmd.asmx/LoginWithToken" + '?nocache=' + new Date().getTime();
-
-    $.ajax({
-        url: url,
-        cache: false,
-        type: "POST",
-        dataType: "json",
-        data: "{_Email:'" + sUser + "', _Token:'" + sToken + "'}",
-        contentType: "application/json; charset=utf-8",
-        success: function (msg) {
-            bInLogin = false;
-            $.mobile.loading('hide');
-            if (msg.d.ReturnCode == 1) {
-
-                Controllers = msg.d.Data.Controllers;
-                UserInfo = msg.d.Data;
-
-                if (Controllers === null || Controllers.length == 0 || Controllers[0] === null) {
-                    $.mobile.changePage("#pageNoControllers");
-                }
-                else {
-                    RefreshControllers();
-                    $.mobile.changePage("#pageMain");
-                }
-
-            }
-            else {
-                $('#lblLoginError').html("Error: " + msg.d.Status);
-                ClearStorage();
-                $.mobile.changePage("#pageLogin");
-            }
-        },
-        error: function (e) {
-            bInLogin = false;
-            $.mobile.loading('hide');
-            $('#lblLoginError').html("Error: " + e.statusText.toString());
-            return false;
-        }
-    });
-}
-
-function RefreshControllers() {
-}
-
-function MainPageSecondTimer() {
-
-    // Add Time
-    $('#divStatus').empty();
-
-
-    var statusHTML = '<ul data-role="listview" data-inset="true" data-theme="c" data-dividertheme="b">';
-    statusHTML += '<li><h3>Current Time<h3/>';
-    var d = new Date();
-    statusHTML += d.toLocaleString() + '</li>';
-
-    var i;
-    for (i = 0; i < Controllers.length; i++ ) {
-        statusHTML += '<li>'  + Controllers[i].MACAddress + '</li>';
-    }
-	statusHTML += '</ul>';
-    
-    $('#divStatus').append(statusHTML).trigger('create');
-    
-}
-
-function GetUser() {
-    // $.cookie("savedUser");
-    return localStorage.getItem("user");
-}
-
-function GetToken() {
-    return localStorage.getItem("token");
-}
-
-function SetUser(user) {
-    localStorage.setItem("user", user);
-}
-
-function SetToken(token) {
-    localStorage.setItem("token", token);
-}
-
-function ClearStorage() {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-}
-
-function ValidUser() {
-    var user = GetUser();
-    if (user == null || user == "") {
-        return false;
-    }
-    return true;
-}
-
-function ValidController() {
-    
-    if (ValidUser() == false)
-        return false;
-
-    if (!Controller || Controller === null) {
-        return false;
-    }
-    return true;
-}
-function ValidData() {
-    if (ValidUser() == false)
-        return false;
-
-    if (!UserInfo || UserInfo === null) {
-        return false;
-    }
-    return true;
-}
-
 
 </script>
 
 <body>
+
 <div data-role="page" id="pageWelcome">
-    <img src="images/Grass_Sky.jpg" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px;" />
-	<div data-role="header" data-theme="b" data-position="fixed">
-        <a href="#pageWelcome" data-direction="reverse" data-theme="a" class="ui-btn-left" data-icon="home" data-iconpos="notext" data-transition="none">Home</a>
-		<div style="text-align: center"><img src="images/RC_Logo_Words.png" class="classHeaderLogo" /></div>
+    <img src="Controller/images/Grass_Sky.jpg" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px;" />
+
+	<div data-role="header" data-theme="b" data-position="fixed" width="100%">
+        <a href="index.html#pageMain" data-direction="reverse" data-theme="a" class="ui-btn-left" data-icon="home" data-iconpos="notext">Home</a>
+		<div style="text-align: center"><a href="index.html"><img src="Controller/images/RC_Logo_Words.png" class="classHeaderLogo" /></a></div>
 	</div>
 
 	<div id="divWelcome" class="content" data-role="content" align="center">
-        <div class="ui-body ui-body-a ui-corner-all" data-theme="b">
-            <h2 style="text-align: center">Welcome to RainCommander</h2>
-            <p style="text-align: center; font-size: medium;"><div class="no-ellipses">Login or Register to access your RainCommander controller</div></p>
-        </div> 
+        <ul data-role="listview" data-inset="true" data-theme="c" data-dividertheme="b">
+            <li><h2 style="text-align: center">Welcome to RainCommander</h2><p style="text-align: center; font-size: medium;">Login or Register to access your RainCommander controller</p></li>
+        </ul> 
 		<p>
-        <a href="#pageLogin" data-role="button" data-inline="true" data-theme="b" data-transition="none">Login</a>
-		<a href="#pageRegister" data-role="button" data-inline="true" data-theme="b" data-transition="none">Register</a>
-		<a href="#pageMain" data-role="button" data-inline="true" data-theme="b" data-transition="none">Main</a>
-		</p>
+        <a href="#pageLogin" data-role="button" data-inline="true" data-theme="b">Login</a>
+		<a href="#pageRegister" data-role="button" data-inline="true" data-theme="b">Register</a></p>
 	</div>
 
 </div>
 
-<div id="pageLogin" data-role="page" data-theme="b">
-    <img src="images/Grass_Sky.jpg" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px;" />
+<div data-role="page" id="pageMain" data-theme="b">
+    <img src="Controller/images/Grass_Sky.jpg" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px;" />
 	<div data-role="header" data-theme="b" data-position="fixed">
-        <a href="#pageWelcome" data-direction="reverse" data-theme="a" class="ui-btn-left" data-icon="home" data-iconpos="notext" data-transition="none">Home</a>
-		<div style="text-align: center"><img src="images/RC_Logo_Words.png" class="classHeaderLogo" /></div>
+        <a href="index.html#pageMain" data-theme="a" class="ui-btn-left" data-icon="home" data-iconpos="notext">Home</a>
+		<div style="text-align: center"><a href="#pageMain"><img src="Controller/images/RC_Logo_Words.png" class="classHeaderLogo" /></a></div>
 	</div>
-    
-	<div class="content" data-role="content">
 
+	<div class="content" data-role="content">
+        <label id="lblPageMainError" class="rcErrorLabel"></label>
+        <div id="divStatus" >
+            <ul id="lvStatus" data-role="listview" data-inset="true" data-theme="c" data-dividertheme="b"></ul> 
+        </div>
+
+        <div style="text-align: center">
+            <a href="#pageConfigureController" data-role="button" data-inline="true" >Configure</a>
+            <a href="#pageRun" data-role="button" data-inline="true">Make It Rain!</a>
+            <a href="#pageHistory" data-role="button" data-inline="true">History</a>
+        </div>
+	</div>
+
+    <div id="dlgPause" data-role="popup" data-theme="a" class="ui-corner-all">
+        <a href="#" data-rel="back" data-role="button" data-theme="b" data-icon="delete" data-iconpos="notext" class="ui-btn-right">Close</a>
+	    <form>
+		    <div style="padding:10px 20px;">
+                <div id="divPauseMsg">Pause Controller?</div>
+    		        <div data-role="fieldcontain" id="divPauseFields">
+				    <select id="selPauseDuration" data-native-menu="false">
+					    <option value="1440">One Day</option>
+					    <option value="2880">Two Days</option>
+					    <option value="4320">Three Days</option>
+					    <option value="10080">Seven Days</option>
+				    </select>
+                </div>
+		        <a data-role="button" data-inline="true" data-theme="b" onclick="SendPauseCommand()">Yes</a>
+		        <a data-role="button" data-inline="true" data-theme="b" href="#" data-rel="back">No</a>
+		    </div>
+	    </form>
+    </div>
+    <div id="dlgPlay" data-role="popup" data-theme="a" class="ui-corner-all">
+        <a href="#" data-rel="back" data-role="button" data-theme="b" data-icon="delete" data-iconpos="notext" class="ui-btn-right">Close</a>
+	    <form>
+		    <div style="padding:10px 20px;">
+                <div>Run Controller?</div>
+		        <a data-role="button" data-inline="true" data-theme="b" onclick="SendPlayCommand()">Yes</a>
+		        <a data-role="button" data-inline="true" data-theme="b" href="#" data-rel="back">No</a>
+		    </div>
+	    </form>
+    </div>
+
+    <div data-role="popup" id="dlgSelectController">
+    </div>
+
+	<div data-role="footer" data-position="fixed" data-theme="b" class="ui-bar">
+		<div style="margin: 4px; text-align: center">
+            <img src="Controller/images/RC_Logo_Water.png" class="classFooterLogo" />
+        </div>
+	</div>
+</div>
+
+
+<div id="pageLogin" data-role="page" data-theme="b">
+    <img src="Controller/images/Grass_Sky.jpg" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px;" />
+	<div data-role="header" data-theme="b" data-position="fixed">
+		<div style="text-align: center"><a href="index.html"><img src="Controller/images/RC_Logo_Words.png" class="classHeaderLogo" /></a></div>
+	</div>
+
+	<div class="content" data-role="content">
 	<form id="frmLogin">
         <div class="ui-body ui-body-a ui-corner-all" >
             <label id="lblLoginError" class="rcErrorLabel"></label>
@@ -318,17 +231,16 @@ function ValidData() {
             </div>
 		        
             <a data-role="button" data-inline="true" data-theme="b" onclick="LoginClick()">Login</a>
-		    <a href="#pageForgotPassword" data-role="button" data-inline="true" data-theme="b" data-transition="none">Forgot Password?</a>
+		    <a href="#pageForgotPassword" data-role="button" data-inline="true" data-theme="b" >Forgot Password?</a>
         </div>
 	</form>
     </div>
 </div>
 
 <div id="pageRegister" data-role="page" data-theme="a">
-    <img src="images/Grass_Sky.jpg" style="width: 1200px; height: 100%; position: absolute; top: 0px; left: 0px;" />
+    <img src="Controller/images/Grass_Sky.jpg" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px;" />
 	<div data-role="header" data-theme="b" data-position="fixed">
-        <a href="#pageWelcome" data-direction="reverse" data-theme="a" class="ui-btn-left" data-icon="home" data-iconpos="notext" data-transition="none">Home</a>
-		<div style="text-align: center"><img src="images/RC_Logo_Words.png" class="classHeaderLogo" /></div>
+		<div style="text-align: center"><a href="index.html"><img src="Controller/images/RC_Logo_Words.png" class="classHeaderLogo" /></a></div>
 	</div>
 
 	<div class="content" data-role="content">
@@ -377,11 +289,34 @@ function ValidData() {
     </div>
 </div>
 
-<div data-role="page" id="pageNoControllers" data-theme="b">
-    <img src="/Controller/images/Grass_Sky.jpg" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px;" />
+<div data-role="page" id="pageForgotPassword" data-theme="a" data-history="false" >
+    <img src="Controller/images/Grass_Sky.jpg" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px;" />
 	<div data-role="header" data-theme="b" data-position="fixed">
-        <a href="default.htm#pageMain" data-theme="a" class="ui-btn-left" data-icon="home" data-iconpos="notext">Home</a>
-		<div style="text-align: center"><a href="default.htm"><img src="/Controller/images/RC_Logo_Words.png" class="classHeaderLogo" /></a></div>
+		<div style="text-align: center"><a href="index.html"><img src="Controller/images/RC_Logo_Words.png" class="classHeaderLogo" /></a></div>
+	</div>
+
+	<div class="content" data-role="content">
+	    <form id="Form1">
+            <div class="ui-body ui-body-a ui-corner-all" >
+                <label id="lblForgotPasswordError" class="rcErrorLabel"></label>
+                <p></p>
+                <div id="divForgotPasswordFields" data-role="fieldcontain">
+                    <label for="forgotUsername"><em>* </em> Email:</label>
+		            <input type="text" id="forgotUsername" value="" placeholder="Email" data-inline="true" data-theme="a" class="required, email"/>
+                </div>
+		        <a id="requestButton" data-role="button" data-inline="true" data-theme="b" onclick="RequestPasswordReset()">Reset Password</a>
+            </div>
+	    </form>
+    </div>
+</div>
+
+
+
+<div data-role="page" id="pageNoControllers" data-theme="b">
+    <img src="Controller/images/Grass_Sky.jpg" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px;" />
+	<div data-role="header" data-theme="b" data-position="fixed">
+        <a href="index.html#pageMain" data-theme="a" class="ui-btn-left" data-icon="home" data-iconpos="notext">Home</a>
+		<div style="text-align: center"><a href="index.html"><img src="Controller/images/RC_Logo_Words.png" class="classHeaderLogo" /></a></div>
 	</div>
 
 	<div class="content" data-role="content">
@@ -399,36 +334,384 @@ function ValidData() {
 	</div>
 	<div data-role="footer" data-position="fixed" data-theme="b" class="ui-bar">
 		<div style="margin: 4px; text-align: center">
-            <img src="/Controller/images/RC_Logo_Water.png" class="classFooterLogo" />
+            <img src="Controller/images/RC_Logo_Water.png" class="classFooterLogo" />
         </div>
 	</div>
 </div>
 
-<div data-role="page" id="pageMain" data-theme="b">
-    <img src="images/Grass_Sky.jpg" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px;" />
+<div data-role="page" id="pageRun" data-theme="b">
+    <img src="Controller/images/Grass_Sky.jpg" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px;" />
 	<div data-role="header" data-theme="b" data-position="fixed">
-        <a href="#pageWelcome" data-direction="reverse" data-theme="a" class="ui-btn-left" data-icon="home" data-iconpos="notext" data-transition="none">Home</a>
-		<div style="text-align: center"><a href="index.html"><img src="images/RC_Logo_Words.png" class="classHeaderLogo" /></a></div>
+        <a href="index.html#pageMain" data-theme="a" class="ui-btn-left" data-icon="home" data-iconpos="notext">Home</a>
+		<div style="text-align: center"><a href="index.html#pageMain"><img src="Controller/images/RC_Logo_Words.png" class="classHeaderLogo" /></a></div>
 	</div>
 
 	<div class="content" data-role="content">
-        <label id="lblPageMainError" class="rcErrorLabel"></label>
-        <div id="divStatus" >
-            <ul id="lvStatus" data-role="listview" data-inset="true" data-theme="c" data-dividertheme="b"></ul> 
-        </div>
-        <div style="text-align: center">
-            <a href="#pageConfigureController" data-role="button" data-inline="true" >Configure</a>
-            <a href="#pageRun" data-role="button" data-inline="true">Make It Rain!</a>
-            <a href="#pageHistory" data-role="button" data-inline="true">History</a>
-            <a href="#" onclick="GoToWelcome()" data-role="button" data-inline="true">Welcome</a>
-        </div>
+		<form action="#" method="get">
+            <div id="divRunSchedules"></div>
+            <p></p>
+            <div id="divRunZones"></div>
+        </form>
 	</div>
 
 	<div data-role="footer" data-position="fixed" data-theme="b" class="ui-bar">
-		<div style="margin: 4px; text-align: center">
-            <img src="images/RC_Logo_Water.png" class="classFooterLogo" />
-        </div>
+        <a href="#pageConfigureController" data-direction="reverse" data-theme="a" data-icon="gear" data-role="button">Configure</a>
 	</div>
+
+    <div id="confirmRunSchedule" data-role="popup" data-theme="a" class="ui-corner-all">
+	    <form>
+		    <div id="divConfirmScheduleContent"  style="padding:10px 20px;"></div>
+	    </form>
+    </div>
+    <div id="confirmRunZone" data-role="popup" data-theme="a" class="ui-corner-all">
+	    <form>
+		    <div id="divConfirmZoneContent" style="padding:10px 20px;"></div>
+	    </form>
+    </div>
+
+</div>
+
+
+<div data-role="page" id="pageConfigureAccount" data-theme="a">
+    <img src="Controller/images/Grass_Sky.jpg" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px;" />
+
+	<div data-role="header" data-theme="b" data-position="fixed">
+        <a href="index.html#pageMain" data-theme="a" class="ui-btn-left" data-icon="home" data-iconpos="notext">Home</a>
+		<div style="text-align: center"><a href="index.html#pageMain"><img src="Controller/images/RC_Logo_Words.png" class="classHeaderLogo" /></a></div>
+		<div data-role="navbar">
+			<ul>
+				<li><a href="#pageConfigureController">Controller</a></li>
+				<li><a href="#pageConfigureZones">Zones</a></li>
+				<li><a href="#pageConfigureSchedules">Schedules</a></li>
+				<li><a href="#" class="ui-btn-active ui-state-persist">Account</a></li>
+			</ul>
+		</div><!-- /navbar -->
+	</div>
+	<div class="content" data-role="content">
+        <ul id="lvAccount" data-role="listview" data-inset="true" data-theme="c" data-dividertheme="b" >
+            <li data-role="list-divider" id="li2">Account Information</li>
+            <li id="li4">
+                <div class="ui-grid-a">
+                    <div class="ui-block-a" style="width: 400px">Login<br /><label class="rclabel" id="lblCurrentUser" style="padding-left: 10px"></label></div>
+                    <div class="ui-block-b" style="width: 30px">
+                        <a data-role="button" data-inline="true" href="#pageChangePassword" data-theme="b" data-mini="true">Change Password</a>
+                        <a data-role="button" data-inline="true" href="#pageWelcome" data-mini="true" data-theme="b" onclick="Logout()">Logout</a>
+                    </div>
+                </div>
+            </li>
+            <li id="li5">
+                <div class="ui-grid-a">
+                    <div class="ui-block-a" style="width: 400px">Contact Info<br />
+                        <label class="rclabel" id="lblNameOnAccount" style="padding-left: 10px"></label>
+                        <br /><label class="rclabel" id="lblPhone" style="padding-left: 10px"></label>
+                    </div>
+                    <div class="ui-block-b" style="width: 30px"><a data-role="button" data-inline="true" href="#pageEditContact" data-theme="b" data-mini="true">Edit Contact</a></div>
+                </div>
+            </li>
+            <li id="li3">
+                <div class="ui-grid-a">
+                    <div class="ui-block-a" style="width: 400px">Address<br />
+                        <div style="padding-left: 10px">
+                            <label class="rclabel" id="lblAccountAddress"></label>
+                        </div>
+                    </div>
+                    <div class="ui-block-b" style="width: 30px"><a data-role="button" data-inline="true" href="#pageEditAccountAddress" data-theme="b" data-mini="true">Edit Address</a></div>
+                </div>
+            </li>
+        </ul> 
+	</div>
+</div>
+
+<div data-role="page" id="pageChangePassword" data-theme="a" >
+    <img src="Controller/images/Grass_Sky.jpg" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px;" />
+
+	<div data-role="header" data-theme="b" data-position="fixed">
+        <a href="index.html#pageMain" data-theme="a" class="ui-btn-left" data-icon="home" data-iconpos="notext">Home</a>
+		<div style="text-align: center"><a href="index.html#pageMain"><img src="Controller/images/RC_Logo_Words.png" class="classHeaderLogo" /></a></div>
+	</div>
+
+	<div class="content" data-role="content">
+	    <form>
+            <div class="ui-body ui-body-a ui-corner-all" >
+                <p><label id="lblChangePasswordError" class="rcErrorLabel"></label></p>
+                <div data-role="fieldcontain">
+    		        <label for="currentPass">Current:</label>
+	    	        <input type="password" name="currentPass" id="currentPass" value="" placeholder="Current Password" data-inline="true"  data-theme="a" />
+                </div>
+                <div data-role="fieldcontain">
+    		        <label for="newPass">New:</label>
+	    	        <input type="password" name="newPass" id="newPass" value="" placeholder="New Password" data-inline="true"  data-theme="a" />
+                </div>
+                <div data-role="fieldcontain">
+		            <label for="confirmNewPass">Confirm:</label>
+    		        <input type="password" name="confirmNewPass" id="confirmNewPass" value="" placeholder="Confirm Password" data-inline="true"  data-theme="a" />
+                </div>
+
+    		    <a data-role="button" data-inline="true" data-theme="b" onclick="ChangePasswordClick()">Change</a>
+    		    <a data-role="button" data-inline="true" data-theme="b" href="#pageConfigureAccount">Cancel</a>
+		    </div>
+	    </form>
+    </div>
+</div>
+
+<div data-role="page" id="pageEditContact"  data-theme="a" class="ui-corner-all" style="padding:10px 20px;">
+    <img src="Controller/images/Grass_Sky.jpg" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px;" />
+
+	<div data-role="header" data-theme="b" data-position="fixed">
+        <a href="index.html#pageMain" data-theme="a" class="ui-btn-left" data-icon="home" data-iconpos="notext">Home</a>
+		<div style="text-align: center"><a href="index.html#pageMain"><img src="Controller/images/RC_Logo_Words.png" class="classHeaderLogo" /></a></div>
+	</div>
+
+	<div class="content" data-role="content">
+	    <form>
+            <div class="ui-body ui-body-a ui-corner-all" >
+                <p><label id="lblEditContactError" class="rcErrorLabel"></label></p>
+                <div data-role="fieldcontain">
+	    	        <label for="editFirstName">First Name:</label>
+    		        <input type="text" name="editFirstName" id="editFirstName" value="" placeholder="First Name" data-inline="true"  data-theme="a" />
+                </div>
+                <div data-role="fieldcontain">
+		            <label for="editLastName">Last Name:</label>
+		            <input type="text" name="editLastName" id="editLastName" value="" placeholder="Last Name" data-inline="true"  data-theme="a" />
+                </div>
+                <div data-role="fieldcontain">
+		            <label for="editPhone">Phone:</label>
+		            <input type="text" name="editPhone" id="editPhone" value="" placeholder="Phone" data-inline="true"  data-theme="a" />
+                </div>
+		    </div>
+    		<a data-role="button" data-inline="true" data-theme="b" onclick="SaveContact()">Save</a>
+    		<a data-role="button" data-inline="true" data-theme="b" href="#pageConfigureAccount">Cancel</a>
+	    </form>
+    </div>
+</div>
+
+<div data-role="page" id="pageEditAccountAddress"  data-theme="a">
+    <img src="Controller/images/Grass_Sky.jpg" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px;" />
+
+	<div data-role="header" data-theme="b" data-position="fixed">
+        <a href="index.html#pageMain" data-theme="a" class="ui-btn-left" data-icon="home" data-iconpos="notext">Home</a>
+		<div style="text-align: center"><a href="index.html#pageMain"><img src="Controller/images/RC_Logo_Words.png" class="classHeaderLogo" /></a></div>
+	</div>
+
+	<div class="content" data-role="content">
+	    <form>
+            <div class="ui-body ui-body-a ui-corner-all" >
+                <p><label id="lblEditAccountAddressError" class="rcErrorLabel"></label></p>
+                <div data-role="fieldcontain">
+                    <label for="editAddress">Address:</label>
+	    	        <input type="text" name="editAddress" id="editAddress" value="" placeholder="Address" data-theme="a" data-inline="true" />
+                </div>
+                <div data-role="fieldcontain">
+                    <label for="editCity">City:</label>
+	    	        <input type="text" name="editCity" id="editCity" value="" placeholder="City" data-theme="a" />
+                </div>
+                <div data-role="fieldcontain">
+                    <label for="editState">State:</label>
+    		        <input type="text" name="editState" id="editState" value="" placeholder="State" data-theme="a" />
+                </div>
+                <div data-role="fieldcontain">
+                    <label for="editZip">Zip:</label>
+    		        <input type="text" name="editZip" id="editZip" value="" placeholder="Zip" data-theme="a" />
+                </div>
+            </div>
+    		<a data-role="button" data-inline="true" data-theme="b" onclick="SaveAccountAddress()">Save</a>
+    		<a data-role="button" data-inline="true" data-theme="b" href="#pageConfigureAccount">Cancel</a>
+    	</form>
+	</div>
+</div>
+
+
+<div data-role="page" id="pageConfigureController" data-theme="a">
+    <img src="Controller/images/Grass_Sky.jpg" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px;" />
+	<div data-role="header" data-theme="b" data-position="fixed">
+        <a href="index.html#pageMain" data-theme="a" class="ui-btn-left" data-icon="home" data-iconpos="notext">Home</a>
+		<div style="text-align: center"><a href="index.html#pageMain"><img src="Controller/images/RC_Logo_Words.png" class="classHeaderLogo" /></a></div>
+		<div data-role="navbar">
+			<ul>
+				<li><a href="#pageConfigureController"  class="ui-btn-active ui-state-persist">Controller</a></li>
+				<li><a href="#pageConfigureZones">Zones</a></li>
+				<li><a href="#pageConfigureSchedules">Schedules</a></li>
+				<li><a href="#pageConfigureAccount">Account</a></li>
+			</ul>
+		</div><!-- /navbar -->
+
+	</div>
+
+	<div class="content" data-role="content">
+        <ul id="lvController" data-role="listview" data-inset="true" data-theme="c" data-dividertheme="b">
+            <li data-role="list-divider" id="liConfigureController">Name</li>
+            <li id="liConfigureControllerDetail">
+	            <form>
+                    <label class="rclabel" id="lblConfigMAC"></label><br />
+                    <label class="rclabel" id="lblConfigVersion"></label><br />
+                    <a href="#" onclick="LoadConfig()">Configure WIFI</a>
+                </form>
+            </li>
+            <li>
+	            <form>
+		            <div style="padding:10px 20px;">
+                        <label for="txtControllerName">Controller Name:</label>
+		                <input type="text" name="txtControllerName" id="txtControllerName" value="" data-theme="a" />
+    			        <label for="selTimeZone" class="select">Time Zone:</label>
+	    		        <select id="selTimeZone" data-native-menu="false" >
+		    		        <option value="Pacific">Pacific</option>
+			    	        <option value="Arizona">Arizona</option>
+				            <option value="Mountain">Mountain</option>
+    				        <option value="Central">Central</option>
+	    			        <option value="Eastern">Eastern</option>
+    			        </select>
+		                <a data-role="button" data-inline="true" data-theme="b" onclick="UpdateController()">Update</a>
+		            </div>
+	            </form>
+            </li>
+        </ul> 
+	</div>
+</div>
+
+<div data-role="page" id="pageConfigureZones" data-theme="a">
+    <img src="Controller/images/Grass_Sky.jpg" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px;" />
+	<div data-role="header" data-theme="b" data-position="fixed">
+        <a href="index.html#pageMain" data-theme="a" class="ui-btn-left" data-icon="home" data-iconpos="notext">Home</a>
+		<div style="text-align: center"><a href="index.html#pageMain"><img src="Controller/images/RC_Logo_Words.png" class="classHeaderLogo" /></a></div>
+		<div data-role="navbar">
+			<ul>
+				<li><a href="#pageConfigureController">Controller</a></li>
+				<li><a href="#" class="ui-btn-active ui-state-persist">Zones</a></li>
+				<li><a href="#pageConfigureSchedules">Schedules</a></li>
+				<li><a href="#pageConfigureAccount">Account</a></li>
+			</ul>
+		</div><!-- /navbar -->
+
+	</div>
+
+	<div id="divConfigureZones" class="content" data-role="content"></div>
+
+
+</div>
+
+<div data-role="page" id="pageZoneDetail" data-theme="b" >
+    <img src="Controller/images/Grass_Sky.jpg" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px;" />
+	<div data-role="header" data-theme="b" data-position="fixed">
+        <a href="index.html#pageMain" data-theme="a" class="ui-btn-left" data-icon="home" data-iconpos="notext">Home</a>
+		<div style="text-align: center"><a href="index.html#pageMain"><img src="Controller/images/RC_Logo_Words.png" class="classHeaderLogo" /></a></div>
+	</div>
+
+	<div class="content" data-role="content">
+	    <form>
+            <div class="ui-body ui-body-a ui-corner-all" >
+
+            <input type="hidden" id="txtZoneNumber" value="" />
+            <label for="txtZoneName">Zone Name:</label>
+            <input type="text" id="txtZoneName" value="" />
+			<label for="cbZoneEnabled">Enabled</label>
+			<input type="checkbox" id="cbZoneEnabled" class="custom" />
+		    <a data-role="button" data-inline="true" data-theme="b" onclick="UpdateZone()">Update</a>
+		    <a data-role="button" data-direction="reverse" data-inline="true" data-theme="b" onclick="$.mobile.changePage('#pageConfigureZones');">Cancel</a>
+        </div>
+        </form>
+    </div>
+</div>
+
+<div data-role="page" id="pageConfigureSchedules" data-theme="a" >
+    <img src="Controller/images/Grass_Sky.jpg" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px;" />
+	<div data-role="header" data-theme="b" data-position="fixed">
+        <a href="index.html#pageMain" data-theme="a" class="ui-btn-left" data-icon="home" data-iconpos="notext">Home</a>
+		<div style="text-align: center"><a href="index.html#pageMain"><img src="Controller/images/RC_Logo_Words.png" class="classHeaderLogo" /></a></div>
+		<div data-role="navbar">
+			<ul>
+				<li><a href="#pageConfigureController">Controller</a></li>
+				<li><a href="#pageConfigureZones">Zones</a></li>
+				<li><a href="#" class="ui-btn-active ui-state-persist">Schedules</a></li>
+				<li><a href="#pageConfigureAccount">Account</a></li>
+			</ul>
+		</div><!-- /navbar -->
+
+	</div>
+
+    <div id="divConfigureSchedules" class="content" data-role="content"></div>
+
+</div>
+
+<div data-role="page" id="pageHistory" data-theme="a">
+    <img src="Controller/images/Grass_Sky.jpg" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px;" />
+	<div data-role="header" data-theme="b" data-position="fixed">
+        <a href="index.html#pageMain" data-theme="a" class="ui-btn-left" data-icon="home" data-iconpos="notext">Home</a>
+		<div style="text-align: center"><a href="index.html#pageMain"><img src="Controller/images/RC_Logo_Words.png" class="classHeaderLogo" /></a></div>
+	</div>
+	<div id="divScheduleHistory" data-role="content" style="text-align: center; color: #000000;">
+        <ul data-role="listview" data-inset="true" data-theme="c" data-dividertheme="b">
+            <li data-role="list-divider">Coming soon! Test data below....</li>
+            <li data-role="list-divider">Monday, August 5, 2013 <span class="ui-li-count">2</span></li>
+            <li>
+                <h2>Run Schedule - Summer</h2>
+                <p><strong>Start Time - 9:00 PM</strong></p>
+                <p><strong>Duration - 80 Minutes</strong></p>
+            </li>
+            <li>
+                <h2>Run Schedule - Test</h2>
+                <p><strong>Start Time - 11:00 PM</strong></p>
+                <p><strong>Duration - 10 Minutes</strong></p>
+            </li>
+            <li data-role="list-divider">Tuesday, August 6, 2013 <span class="ui-li-count">1</span></li>
+            <li>
+                <h2>Run Schedule - Summer</h2>
+                <p><strong>Start Time - 9:00 PM</strong></p>
+                <p><strong>Duration - 80 Minutes</strong></p>
+            </li>
+        </ul>
+	</div>
+</div>
+
+<div data-role="page" id="pageScheduleDetail" data-theme="b" >
+    <img src="Controller/images/Grass_Sky.jpg" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px;" />
+	<div data-role="header" data-theme="b" data-position="fixed">
+        <a href="index.html#pageMain" data-theme="a" class="ui-btn-left" data-icon="home" data-iconpos="notext">Home</a>
+		<div style="text-align: center"><a href="index.html#pageMain"><img src="Controller/images/RC_Logo_Words.png" class="classHeaderLogo" /></a></div>
+	</div>
+
+	<div class="content" data-role="content">
+	    <form>
+            <div class="ui-body ui-body-a ui-corner-all" >
+                <input type="hidden" id="txtScheduleNumber" value="" />
+                <label for="txtScheduleName">Schedule Name:</label>
+                <input type="text" id="txtScheduleName" value="" />
+			    <label for="cbScheduleEnabled">Enabled</label>
+			    <input type="checkbox" id="cbScheduleEnabled" class="custom" />
+
+                <label for="startTime" data-inline="true">Start Time:</label>            
+                <input name="startTime" id="startTime" class="i-txt" data-inline="true"  />
+
+                <label for="selectScheduleType">Type</label>
+		        <select id="selectScheduleType" data-native-menu="false" data-theme="b">
+				    <option value="1" selected="selected">Even Days</option>
+				    <option value="2">Odd Days</option>
+				    <option value="3">Every Day</option>
+				    <option value="4">Custom</option>
+		        </select>
+
+		        <div id="divCustomDays" style="display:none;">
+                    <label for="selectCustomDays" class="select">Custom Days:</label>
+		            <select id="selectCustomDays" multiple="multiple" data-native-menu="false">
+			            <option>Select Specific Days</option>
+			            <option value="Su">Sunday</option>
+			            <option value="Mo">Monday</option>
+			            <option value="Tu">Tuesday</option>
+			            <option value="We">Wednesday</option>
+			            <option value="Th">Thursday</option>
+			            <option value="Fr">Friday</option>
+			            <option value="Sa">Saturday</option>
+		            </select>
+                </div>
+
+		        <div id="divScheduleDetailZoneDuration" data-role="fieldcontain"></div>
+
+		        <a data-role="button" data-inline="true" data-theme="b" onclick="UpdateSchedule()">Update</a>
+		        <a data-role="button" data-direction="reverse" data-inline="true" data-theme="b" onclick="$.mobile.changePage('#pageConfigureSchedules');">Cancel</a>
+            </div>
+        </form>
+	</div>
+
+
 </div>
 
 </body>

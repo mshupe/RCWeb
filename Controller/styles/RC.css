@@ -1,0 +1,62 @@
+﻿/*
+html {
+  max-width: 400px;
+  max-height: 300px;
+  margin: 0 auto;
+  background: #eee; 
+  position: relative; 
+}
+*/
+
+.content {
+    width: 90% !important;
+    margin: 0 auto !important;
+}
+
+.classHeaderLogo
+{
+    margin: 4px;
+    width: 210px;
+    height: 24px;
+}
+.classFooterLogo 
+{
+    width: 210px; 
+    height: 24px;
+}
+
+.rclabel { font-size: 16px; line-height: 1.4; font-weight: normal; margin: 0 0 .4em; }
+.rcErrorLabel { font-size: 16px; color:Red; font-weight: normal; margin: 0 0 .4em; }
+.rcLIHeader
+{
+    
+    font-size: 18px;
+}  
+
+
+label.error {
+    color: red;
+    font-size: 16px;
+    font-weight: normal;
+    line-height: 1.4;
+    margin-top: 0.5em;
+    width: 100%;
+    float: none;
+}
+ 
+@media screen and (orientation: portrait){
+    label.error { margin-left: 0; display: block; }
+}
+ 
+@media screen and (orientation: landscape){
+    label.error { display: inline-block; margin-left: 22%; }
+}
+ 
+em { color: red; font-weight: bold; padding-right: .25em; }
+
+
+/*.ui-btn { height: 30px; }*/
+
+.ui-btn-text{
+    font-size: 12px;
+}
