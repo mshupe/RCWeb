@@ -1,4 +1,4 @@
-﻿// This code is owned and copyrighted by ZBS Technology, LLC 2013
+// This code is owned and copyrighted by ZBS Technology, LLC 2013
 
 var networkIndex = -1;
 var sConfigureNetwork = "your local wifi network"
@@ -18,6 +18,7 @@ var getNetworksDelayCount = 0;
 var getNetworksRetryCount = 0;
 
 var ControllerMAC = "";
+var ajaxPrefix = "https://raincommander.com";
 
 //$(document).on('pageshow', function (event, ui) {
 //    alert('yep');
@@ -88,8 +89,10 @@ function verifyController() {
     InVerifyController = true;
     var user = GetUser();
 
+    var url = ajaxPrefix + "/Controller/wscmd.asmx/VerifyController" + '?nocache=' + new Date().getTime();
+
     $.ajax({
-        url: "/Controller/wscmd.asmx/VerifyController",
+        url: url,
         cache: false,
         type: "POST",
         dataType: "json",
