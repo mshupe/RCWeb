@@ -20,6 +20,11 @@
     function loadPage(url) {
         document.location.href = url;
     }
+    
+    $(document).bind("mobileinit", function () {
+        $.mobile.defaultPageTransition = 'none';
+    });
+
 
     $(document).on('pageshow', function (event, ui) {
         // Remove the previous page
