@@ -255,6 +255,8 @@ function NetworkSelected(index) {
 }
 function ConfigureOther() {
 
+    $("#dlgOther").popup("close");
+
     var ssid = $('#txtOtherSSID').val();
     var sec = $('#selSecurity').val();
     var key = $('#txtKey').val();
@@ -268,7 +270,6 @@ function ConfigureOther() {
         $('#lblOtherError').html("Please provide a security key.");
         return;
     }
-    $("#dlgOther").popup("close");
     Configure(ssid, sec, key);
     return;
 }
