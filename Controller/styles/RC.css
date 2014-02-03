@@ -60,3 +60,12 @@ em { color: red; font-weight: bold; padding-right: .25em; }
 .ui-btn-text{
     font-size: 12px;
 }
+
+.no-ellipses,
+.no-ellipses .ui-header .ui-title, 
+.no-ellipses .ui-footer .ui-title,
+.no-ellipses .ui-btn-inner,
+.no-ellipses .ui-select .ui-btn-text,
+.no-ellipses .ui-li .ui-btn-text a.ui-link-inherit,
+.no-ellipses .ui-li-heading,
+.no-ellipses .ui-li-desc {text-overflow:ellipsis;overflow:visible;white-space:normal;}
