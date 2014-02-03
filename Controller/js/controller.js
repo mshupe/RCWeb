@@ -601,12 +601,12 @@ function RefreshStatus() {
 
     if (Controllers.length > 1) {
         if (Controller.Status == 'Online') {
-            listHeader = '<li data-role="list-divider" class="rcLIHeader"><fieldset class="ui-grid-a"><div class="ui-block-a" style="margin: 0.5em 0.5em 0 0; width: 200px" >' +
-            Controller.Name + '</div><div class="ui-block-b" style="width:50px; margin: 0.2em 0 0.5em 0;" ><button data-mini="true" onclick="OpenSelectControllerDlg()" >...</button></div></fieldset></li>';
+            listHeader = '<li data-role="list-divider" class="rcLIHeader">' + Controller.Name + '<button data-mini="true" data-inline="true" onclick="OpenSelectControllerDlg()" >...</button></li>';
         }
         else {
-            listHeader = '<li data-role="list-divider" class="rcLIHeader"><fieldset class="ui-grid-a"><div class="ui-block-a" style="margin: 0.5em 0.5em 0 0; width: 200px" >' +
-            Controller.Name + ' - ' + Controller.Status + '</div><div class="ui-block-b" style="width:50px; margin: 0.2em 0 0.5em 0;" ><button data-mini="true" onclick="OpenSelectControllerDlg()" >...</button></div></fieldset></li>';
+            listHeader = '<li data-role="list-divider" class="rcLIHeader">' + Controller.Name + ' - ' + Controller.Status + '<button data-mini="true" data-inline="true" onclick="OpenSelectControllerDlg()" >...</button></li>';
+            //listHeader = '<li data-role="list-divider" class="rcLIHeader"><fieldset class="ui-grid-a"><div class="ui-block-a" style="margin: 0.5em 0.5em 0 0; width: 200px" >' +
+            //Controller.Name + ' - ' + Controller.Status + '</div><div class="ui-block-b" style="width:50px; margin: 0.2em 0 0.5em 0;" ><button data-mini="true" onclick="OpenSelectControllerDlg()" >...</button></div></fieldset></li>';
         }
     }
     $("#lvStatus").append(listHeader).trigger('create');
