@@ -4,16 +4,16 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1"> 
 	<title>Rain Commander</title> 
-	<link rel="stylesheet" href="/Controller/styles/jquery.mobile-1.2.0.css" />
+	<link rel="stylesheet" href="Controller/styles/jquery.mobile-1.2.0.css" />
 	<link rel="stylesheet" href="styles/RC.css" />
 
-    <script src="/Controller/js/json2.js"></script>
-    <script src="/Controller/js/jquery.js"></script>
-    <script src="/Controller/js/jquery.mobile-1.2.0.js"></script>
-    <script src="/Controller/js/jquery.cookie.js"></script>
-    <script src="/Controller/js/jquery.validate.js"></script>
-    <script src="/Controller/js/additional-methods.js"></script>
-    <script src="/Controller/js/configure.js"></script>
+    <script src="Controller/js/json2.js"></script>
+    <script src="Controller/js/jquery.js"></script>
+    <script src="Controller/js/jquery.mobile-1.2.0.js"></script>
+    <script src="Controller/js/jquery.cookie.js"></script>
+    <script src="Controller/js/jquery.validate.js"></script>
+    <script src="Controller/js/additional-methods.js"></script>
+    <script src="Controller/js/configure.js"></script>
 
 </head> 
 <script>
@@ -93,10 +93,10 @@
 </script>
 <body>
 <div data-role="page" id="pageConfigureWifi" data-theme="b">
-    <img src="/Controller/images/Grass_Sky.jpg" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px;" />
+    <img src="Controller/images/Grass_Sky.jpg" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px;" />
 	<div data-role="header" data-theme="b" data-position="fixed">
-        <a href="default.htm#pageMain" data-theme="a" class="ui-btn-left" data-icon="home" data-iconpos="notext">Home</a>
-		<div style="text-align: center"><a href="default.htm#pageMain"><img src="/Controller/images/RC_Logo_Words.png" class="classHeaderLogo" /></a></div>
+        <a href="index.html#pageMain" data-theme="a" class="ui-btn-left" data-icon="home" data-iconpos="notext">Home</a>
+		<div style="text-align: center"><a href="index.html#pageMain"><img src="Controller/images/RC_Logo_Words.png" class="classHeaderLogo" /></a></div>
 	</div>
 
 	<div class="content" align="center">
@@ -107,7 +107,7 @@
                     <h4>Step 1) Go to your device's WiFi settings and select "RC SETUP"</h4>
                     <h5>Your internet connection will be temporarily unavailable until setup is complete</h5>
                 </div>
-                <a id="bGetStarted" data-role="button" data-inline="true" data-theme="b" onclick="loadPage('default.htm');" style="display:none;">Get Started</a>
+                <a id="bGetStarted" data-role="button" data-inline="true" data-theme="b" onclick="loadPage('index.html');" style="display:none;">Get Started</a>
             </div>
             <div id="divNetworks" style="display:none; padding:10px 20px;">
 	        	<ul id="lvNetworks" data-role="listview" data-inset="true" data-theme="c" data-dividertheme="b"></ul>
