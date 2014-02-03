@@ -45,7 +45,7 @@
     $(document).on('pagebeforeshow', function (event, ui) {
         if (event.target.id != "pageWelcome" && event.target.id != "pageLogin" && event.target.id != "pageRegister" && event.target.id != "pageForgotPassword") {
             if (ValidUser() == false || (ValidUser() == true && ValidData() == false)) {
-                $.mobile.changePage("#pageWelcome", { transition: "none" });
+                $.mobile.changePage("#pageWelcome");
                 return;
             }
 
@@ -611,7 +611,7 @@
 			<label for="cbZoneEnabled">Enabled</label>
 			<input type="checkbox" id="cbZoneEnabled" class="custom" />
 		    <a data-role="button" data-inline="true" data-theme="b" onclick="UpdateZone()">Update</a>
-		    <a data-role="button" data-direction="reverse" data-inline="true" data-theme="b" onclick="$.mobile.changePage('#pageConfigureZones', { transition: 'none' });">Cancel</a>
+		    <a data-role="button" data-direction="reverse" data-inline="true" data-theme="b" onclick="$.mobile.changePage('#pageConfigureZones');">Cancel</a>
         </div>
         </form>
     </div>
@@ -711,7 +711,7 @@
 		        <div id="divScheduleDetailZoneDuration" data-role="fieldcontain"></div>
 
 		        <a data-role="button" data-inline="true" data-theme="b" onclick="UpdateSchedule()">Update</a>
-		        <a data-role="button" data-direction="reverse" data-inline="true" data-theme="b" onclick="$.mobile.changePage('#pageConfigureSchedules', { transition: 'none' });">Cancel</a>
+		        <a data-role="button" data-direction="reverse" data-inline="true" data-theme="b" onclick="$.mobile.changePage('#pageConfigureSchedules');">Cancel</a>
             </div>
         </form>
 	</div>
