@@ -1,0 +1,159 @@
+<!DOCTYPE html> 
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1"> 
+	<title>Rain Commander</title> 
+	<link rel="stylesheet" href="/Controller/styles/jquery.mobile-1.2.0.css" />
+	<link rel="stylesheet" href="styles/RC.css" />
+
+    <script src="/Controller/js/json2.js"></script>
+    <script src="/Controller/js/jquery.js"></script>
+    <script src="/Controller/js/jquery.mobile-1.2.0.js"></script>
+    <script src="/Controller/js/jquery.cookie.js"></script>
+    <script src="/Controller/js/jquery.validate.js"></script>
+    <script src="/Controller/js/additional-methods.js"></script>
+    <script src="/Controller/js/configure.js"></script>
+
+</head> 
+<script>
+    function loadPage(url) {
+        document.location.href = url;
+    }
+
+    $(document).on('pageshow', function (event, ui) {
+        // Remove the previous page
+        //$(ui.prevPage).remove();
+    });
+
+/*
+    $(document).on('pagehide', function (e) {
+        var page = $(e.target);
+        if (!$.mobile.page.prototype.options.domCache
+            && (!page.attr('data-dom-cache')
+                || page.attr('data-dom-cache') == "false")
+            ) {
+            page.remove();
+        }
+    });
+*/
+    $(document).on("pageinit", pageInit);
+
+    function pageInit() {
+        $("#pageConfigureWifi").bind({
+            pagebeforeshow: function (event, ui) {
+                var user = GetUser();
+
+                // Make sure a user is logged in
+                if (user == null || user == "") {
+                    RefreshSetupStatus('login');
+                    return;
+                }
+
+                var ua = navigator.userAgent;
+                var checker = {
+                    iphone: ua.match(/(iPhone|iPod|iPad)/),
+                    blackberry: ua.match(/BlackBerry/),
+                    android: ua.match(/Android/)
+                };
+                if (checker.android) {
+                    RefreshSetupStatus('android');
+                    return;
+                }
+
+                foundController = false;
+                InFindController = false;
+                loadedNetworks = false;
+                InGetNetworks = false;
+
+                findRetryCount = 0;
+                findTimmerDelayCount = 0;
+                getNetworksDelayCount = 0;
+                getNetworksRetryCount = 0;
+
+                $('#divNetworks').hide();
+                RefreshSetupStatus('welcome');
+
+                // Start the timer to walk us through the setup process
+                if (timerFindController == null)
+                    timerFindController = setInterval(function () { ConfigurePageSecondTimer() }, 1000);
+            },
+
+            pagehide: function (event, ui) {
+                if (timerFindController != null)
+                    clearInterval(timerFindController);
+                timerFindController = null;
+                foundController = false;
+            }
+        });
+
+
+    }
+
+</script>
+<body>
+<div data-role="page" id="pageConfigureWifi" data-theme="b">
+    <img src="/Controller/images/Grass_Sky.jpg" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px;" />
+	<div data-role="header" data-theme="b" data-position="fixed">
+        <a href="default.htm#pageMain" data-theme="a" class="ui-btn-left" data-icon="home" data-iconpos="notext">Home</a>
+		<div style="text-align: center"><a href="default.htm#pageMain"><img src="/Controller/images/RC_Logo_Words.png" class="classHeaderLogo" /></a></div>
+	</div>
+
+	<div class="content" align="center">
+	    <form>
+            <div style="padding:10px 20px;" class="ui-body ui-body-c ui-corner-all">
+    		    <div id="divGetNetworks" class="no-ellipses">
+                    <h3>Connect RainCommander to your WIFI network</h3>
+                    <h4>Step 1) Go to your device's WiFi settings and select "RC SETUP"</h4>
+                    <h5>Your internet connection will be temporarily unavailable until setup is complete</h5>
+                </div>
+                <a id="bGetStarted" data-role="button" data-inline="true" data-theme="b" onclick="loadPage('default.htm');" style="display:none;">Get Started</a>
+            </div>
+            <div id="divNetworks" style="display:none; padding:10px 20px;">
+	        	<ul id="lvNetworks" data-role="listview" data-inset="true" data-theme="c" data-dividertheme="b"></ul>
+		        <a id="bRefreshNetworks" data-role="button" data-inline="true" data-theme="b" onclick="GetNetworks()">Refresh</a>
+                <a href="#dlgOther" data-rel="popup" data-position-to="window" data-role="button" data-inline="true" data-theme="b">Other</a>
+            </div>
+        </form>
+	</div>
+    <div id="dlgOther" data-role="popup" data-theme="a" class="ui-corner-all" style="padding:10px 20px;">
+        <a href="#" data-rel="back" data-role="button" data-theme="b" data-icon="delete" data-iconpos="notext" class="ui-btn-right">Close</a>
+	    <form>
+            <label id="lblOtherError"></label>
+			<div data-role="fieldcontain">
+                <label for="txtOtherSSID" data-inline="true" >SSID:</label>
+                <input type="text" id="txtOtherSSID" value="" />
+            </div>
+			<div data-role="fieldcontain">
+    			<label for="selSecurity" class="select" >Security:</label>
+	    		<select id="selSecurity" data-native-menu="false" >
+		    		<option value="none">None</option>
+			    	<option value="wep">WEP</option>
+				    <option value="wpa">WPA</option>
+    				<option value="wpa">WPA 2</option>
+	    			<option value="wpa">WPA And WPA 2</option>
+    			</select>
+            </div>
+            <label for="txtKey">Network Key:</label>
+            <input type="text" id="txtKey" value="" />
+		    <a data-role="button" data-inline="true" data-theme="b" onclick="ConfigureOther()">Configure</a>
+        </form>
+    </div>
+    <div id="dlgNetworkKey" data-role="popup" data-theme="a" class="ui-corner-all" style="padding:10px 20px;">
+	    <form>
+            <label id="lblNetworkKeyError"></label>
+            <label for="txtKey">Network Key:</label>
+            <input type="text" id="txtNetworkKey" value="" />
+		    <a data-role="button" data-inline="true" data-theme="b" onclick="ConfigureNetwork()">Configure</a>
+        </form>
+    </div>
+</div>
+
+
+<script>
+
+
+
+</script>
+</body>
+</html>
