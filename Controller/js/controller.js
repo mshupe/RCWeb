@@ -431,7 +431,7 @@ function PageScheduleDetailRefresh() {
 // Zone Detail Functions
 function ZoneSelected(index) {
 
-    $.mobile.changePage("#pageZoneDetail", { transition: "none" });
+    $.mobile.changePage("#pageZoneDetail");
 
     // Set the zone values
     $('#txtZoneNumber').val(Controller.Zones[index].Number);
@@ -458,7 +458,7 @@ function UpdateZone() {
     SendCommand("Update Zone - " + sZoneName, "cmd=updateZone&num=" + nZoneNumber.toString() + "&name=" + encodeURIComponent(sZoneName) + "&enabled=" + nEnabled.toString(), false);
 
     PageConfigureZoneRefresh();
-    $.mobile.changePage("#pageConfigureZones", { transition: "none" });
+    $.mobile.changePage("#pageConfigureZones");
 }
 
 
@@ -508,7 +508,7 @@ function RefreshWelcome() {
         window.setTimeout("ReLogin()", 200);
     }
     else if (ValidUser() == true && ValidData() == true) {
-        $.mobile.changePage("#pageMain", { transition: "none" });
+        $.mobile.changePage("#pageMain");
     }
     else {
         welcomeHTML = '<ul data-role="listview" data-inset="true" data-theme="c" data-dividertheme="b">' +
@@ -874,7 +874,7 @@ function UpdateController() {
 
 // Schedule Detail Functions
 function AddSchedule() {
-    $.mobile.changePage("#pageScheduleDetail", { transition: "none" });
+    $.mobile.changePage("#pageScheduleDetail");
 
     // Find the next available Schedule Number
     var nNextScheduleNumber;
@@ -916,7 +916,7 @@ function ScheduleSelectedOffset(nOffset) {
 }
 
 function ScheduleSelected(schedule) {
-    $.mobile.changePage("#pageScheduleDetail", { transition: "none" });
+    $.mobile.changePage("#pageScheduleDetail");
 
     // Set the schedule values
     $('#txtScheduleNumber').val(schedule.Number);
@@ -1094,7 +1094,7 @@ function UpdateSchedule() {
     SendCommand("Update Schedule - " + Schedule.Name, sCMD, false);
     PageConfigureScheduleRefresh();
 
-    $.mobile.changePage("#pageConfigureSchedules", { transition: "none" });
+    $.mobile.changePage("#pageConfigureSchedules");
 }
 
 
@@ -1173,11 +1173,11 @@ function Login(sNewUser, sNewPassword, sMessage) {
                 SetToken(UserInfo.Token);
 
                 if (Controllers === null || Controllers.length == 0 || Controllers[0] === null) {
-                    $.mobile.changePage("#pageNoControllers", { transition: "none" });
+                    $.mobile.changePage("#pageNoControllers");
                 }
                 else {
                     RefreshControllers();
-                    $.mobile.changePage("#pageMain", { transition: "none" });
+                    $.mobile.changePage("#pageMain");
                 }
 
             }
@@ -1225,18 +1225,18 @@ function LoginWithToken(sToken, sUser, sMessage) {
                 UserInfo = msg.d.Data;
 
                 if (Controllers === null || Controllers.length == 0 || Controllers[0] === null) {
-                    $.mobile.changePage("#pageNoControllers", { transition: "none" });
+                    $.mobile.changePage("#pageNoControllers");
                 }
                 else {
                     RefreshControllers();
-                    $.mobile.changePage("#pageMain", { transition: "none" });
+                    $.mobile.changePage("#pageMain");
                 }
 
             }
             else {
                 $('#lblLoginError').html("Error: " + msg.d.Status);
                 ClearStorage();
-                $.mobile.changePage("#pageLogin", { transition: "none" });
+                $.mobile.changePage("#pageLogin");
             }
         },
         error: function (e) {
@@ -1559,7 +1559,7 @@ function RefreshData(displayLoader) {
                 UserInfo = msg.d.Data;
                 Controllers = msg.d.Data.Controllers;
                 RefreshControllers();
-                $.mobile.changePage("#pageMain", { transition: "none" });
+                $.mobile.changePage("#pageMain");
             }
             else {
                 $('#lblPageMainError').html("Error: " + msg.d.Status);
@@ -1616,7 +1616,7 @@ function SendCommand(desc, cmd, showMainOnSuccess) {
             }
             else {
                 if (showMainOnSuccess) {
-                    $.mobile.changePage("#pageMain", { transition: "none" });
+                    $.mobile.changePage("#pageMain");
                     RefreshData();
                 }
             }
