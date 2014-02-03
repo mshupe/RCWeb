@@ -8,8 +8,6 @@ html {
 }
 */
 
-.ui-page { -webkit-backface-visibility: hidden; }
-
 .content {
     width: 90% !important;
     margin: 0 auto !important;
