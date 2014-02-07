@@ -521,11 +521,11 @@ function fcalc(ssid, pass) {
 
 
 function GetUser() {
-    return $.cookie("savedUser");
-    //return localStorage.getItem("user");
+    //return $.cookie("savedUser");
+    return localStorage.getItem("user");
 }
 
 function GetToken() {
-    return $.cookie("savedPassword");
-    //return localStorage.getItem("token");
+    //return $.cookie("savedPassword");
+    return localStorage.getItem("token");
 }
