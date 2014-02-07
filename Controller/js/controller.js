@@ -130,8 +130,8 @@ $(ui.prevPage).remove();
 */
 
 function LoadConfig() {
-    $.cookie("savedUser", GetUser(), { expires: 10000, path: '/' });
-    $.cookie("savedPassword", GetToken(), { expires: 10000, path: '/' });
+    //$.cookie("savedUser", GetUser(), { expires: 10000, path: '/' });
+    //$.cookie("savedPassword", GetToken(), { expires: 10000, path: '/' });
     //document.location.href = "http://www.raincommander.com/Controller/configure.htm";
     document.location.href = "configure.html";
 }
