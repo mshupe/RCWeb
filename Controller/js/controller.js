@@ -1319,7 +1319,7 @@ function SaveContact() {
         success: function (msg) {
             $.mobile.loading('hide');
             if (msg.d.ReturnCode == 1) {
-                $("#dlgEditContact").popup("close");
+                $('#lblEditContactError').html("Saved!");
                 UserInfo.FirstName = sFirstName;
                 UserInfo.LastName = sLastName;
                 UserInfo.Phone = sPhone;
@@ -1366,7 +1366,7 @@ function SaveAccountAddress() {
         success: function (msg) {
             $.mobile.loading('hide');
             if (msg.d.ReturnCode == 1) {
-                $("#dlgEditAccountAddress").popup("close");
+                $('#lblEditAccountAddressError').html("Saved!");
                 UserInfo.Address = sAddress;
                 UserInfo.City = sCity;
                 UserInfo.State = sState;
