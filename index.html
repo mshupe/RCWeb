@@ -21,14 +21,7 @@
 
 <script language="JavaScript">
 
-   $(document).bind("mobileinit", function () {
-        $.mobile.defaultPageTransition = 'none';
-        
-         var url = "http://www.raincommander.com/controller/rceula.html";
-         $("#divEULA").load(url);
-    });
-    
-var bInit = false;
+    var bInit = false;
 
     $(document).on("pageinit", pageInit);
     function pageInit(event) {
