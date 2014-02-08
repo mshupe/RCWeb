@@ -60,34 +60,6 @@
                 // Set up a timer to refresh seconds if we have valid schedule or zone seconds
                 timerUpdateSeconds = setInterval(MainPageSecondTimer, 1000);
             }
-            else if (event.target.id == "pageLogin") {
-                $('#lblLoginError').html("");
-                $('#loginUsername').val("");
-                $('#loginPassword').val("");
-
-                //ResetPasswordRequest = 0;
-                loginValidator.resetForm();
-            }
-            else if (event.target.id == "pageForgotPassword") {
-                $('#lblForgotPasswordError').html("");
-                $('#forgotUsername').html("");
-                $('#forgotUsername').textinput('enable');
-                $('#requestButton').removeClass('ui-disabled');
-            }
-            else if (event.target.id == "pageRegister") {
-                $('#lblRegisterError').html("");
-                $('#regUsername').val('');
-                $('#regPassword').val('');
-                $('#regFirstName').val('');
-                $('#regLastName').val('');
-                $('#regPhone').val('');
-                $('#regAddress').val('');
-                $('#regCity').val('');
-                $('#regState').val('');
-                $('#regZip').val('');
-
-                registerValidator.resetForm();
-            }
             else if (event.target.id == "pageConfigureZones") {
                 PageConfigureZoneRefresh();
             }
@@ -116,6 +88,36 @@
                 RefreshAccountAddress();
             }
         }
+        else if (event.target.id == "pageLogin") {
+            $('#lblLoginError').html("");
+            $('#loginUsername').val("");
+            $('#loginPassword').val("");
+
+            //ResetPasswordRequest = 0;
+            loginValidator.resetForm();
+        }
+        else if (event.target.id == "pageForgotPassword") {
+            $('#lblForgotPasswordError').html("");
+            $('#forgotUsername').html("");
+            $('#forgotUsername').textinput('enable');
+            $('#requestButton').removeClass('ui-disabled');
+        }
+        else if (event.target.id == "pageRegister") {
+            $('#lblRegisterError').html("");
+            $('#regUsername').val('');
+            $('#regPassword').val('');
+            $('#regFirstName').val('');
+            $('#regLastName').val('');
+            $('#regPhone').val('');
+            $('#regAddress').val('');
+            $('#regCity').val('');
+            $('#regState').val('');
+            $('#regZip').val('');
+            $('#regEULA').attr('checked', false).checkboxradio("refresh");
+
+            registerValidator.resetForm();
+        }
+        
         if (event.target.id == "pageWelcome") {
             RefreshWelcome();
         }
@@ -288,9 +290,21 @@
                     <label for="regZip"><em>* </em> Zip:</label>
 	    	        <input type="text" id="regZip" value="" placeholder="Zip" data-theme="a" class="required" />
                 </div>
-		        <a data-role="button" data-inline="true" data-theme="b" onclick="Register()">Register</a>
+                <div data-role="fieldcontain">
+                   <fieldset class="ui-grid-a">
+                      <div class="ui-block-a" style="width: 150px">
+	                    <label for="regEULA"><em>* </em>I agree</label>
+                        <input type="checkbox" id="regEULA" class="custom" />
+                      </div> 
+                      <div class="ui-block-b">
+                        <h4>to the following: <a href="www.raincommander.com/controller/rceula.pdf" target="_blank">terms and conditions</a></h4>
+                      </div> 
+                   </fieldset>
+                </div>
+                <a data-role="button" data-inline="true" data-theme="b" onclick="Register()">Register</a>
+                <a data-role="button" data-inline="true" data-theme="b" href="#pageWelcome" >Cancel</a>
             </div>
-	    </form>
+        </form>
     </div>
 </div>
 
