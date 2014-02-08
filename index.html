@@ -25,6 +25,7 @@
         $.mobile.defaultPageTransition = 'none';
         
          var url = "http://www.raincommander.com/controller/rceula.html";
+         alert('loading eula');
          $("#divEULA").load(url);
     });
     
@@ -317,13 +318,14 @@
 </div>
 
 <div data-role="page" id="pageEULA">
-    <img src="Controller/images/Grass_Sky.jpg" style="width: 100%; height: 100%; position: absolute; top: 0px; left: 0px;" />
-	<div data-role="header" data-theme="b" data-position="fixed">
-		<div style="text-align: center"><a href="index.html"><img src="Controller/images/RC_Logo_Words.png" class="classHeaderLogo" /></a></div>
-	</div>
+    <div class="content" align="center">
+    <form>
         <a data-role="button" data-rel="back" data-inline="true" data-theme="b">OK</a>
 	<div data-role="content" id="divEULA">
 	</div>
+        <a data-role="button" data-rel="back" data-inline="true" data-theme="b">OK</a>
+    </form>
+    </div>
 </div>
 
 <div data-role="page" id="pageForgotPassword" data-theme="a" data-history="false" >
