@@ -134,6 +134,11 @@
             timerUpdateSeconds = null;
         }
     });
+    
+    function openEULA() {
+    	alert('eula');
+	window.open("http://www.raincommander.com/controller/rceula.pdf", "_system");
+    }
 
 </script>
 
@@ -297,7 +302,7 @@
                         <input type="checkbox" id="regEULA" class="custom" />
                       </div> 
                       <div class="ui-block-b">
-                        <h4>to the following: <a onclick=”window.open(‘http://www.raincommander.com/controller/rceula.pdf’, '_system');”>terms and conditions</a></h4>
+                        <h5>to the following: <a href="#" onclick=”openEULA()">terms and conditions</a></h5>
                       </div> 
                    </fieldset>
                 </div>
