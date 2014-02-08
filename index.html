@@ -29,9 +29,18 @@
          $("#divEULA").load(url);
     });
     
-    
+var bInit = false;
+
     $(document).on("pageinit", pageInit);
     function pageInit(event) {
+    	if (bInit == false) {
+            bInit = true;
+            $.mobile.defaultPageTransition = 'none';
+        
+             var url = "http://www.raincommander.com/controller/rceula.html";
+             alert('loading eula');
+             $("#divEULA").load(url);
+    	}
         //alert("From Init - target = " + event.target.id);
         if (event.target.id != "pageWelcome" && event.target.id != "pageLogin" && event.target.id != "pageRegister" && event.target.id != "pageForgotPassword" && event.target.id != "pageEULA") {
             if (ValidUser() == false || (ValidUser() == true && ValidData() == false)) {
