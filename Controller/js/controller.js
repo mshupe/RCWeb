@@ -1454,7 +1454,12 @@ function Register() {
         txtState = $('#regState'),
         txtZip = $('#regZip');
 
-    if (txtUser.val() == '' || txtPassword.val() == '') {
+    var bEULA = $('#regEULA').prop('checked');
+    if (bEULA == false) {
+        $('#lblRegisterError').html('Please accept "Terms and Conditions"');
+        return;
+    }
+    else if (txtUser.val() == '' || txtPassword.val() == '') {
         $('#lblRegisterError').html('Please enter a valid user and password');
         return;
     }
