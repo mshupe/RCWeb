@@ -10,6 +10,11 @@
 
     <script src="Controller/js/json2.js"></script>
     <script src="Controller/js/jquery.js"></script>
+    <script>
+        $(document).bind("mobileinit", function () {
+            $.mobile.defaultPageTransition = 'none';
+        }
+    </script>
     <script src="Controller/js/jquery.mobile-1.2.0.js"></script>
     <script src="Controller/js/jquery.cookie.js"></script>
     <script src="Controller/js/jquery.validate.js"></script>
@@ -27,8 +32,6 @@
     function pageInit(event) {
     	if (bInit == false) {
             bInit = true;
-            $.mobile.defaultPageTransition = 'none';
-        
              var url = "http://www.raincommander.com/controller/rceula.html";
              $("#divEULA").load(url);
     	}
