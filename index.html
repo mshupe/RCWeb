@@ -89,9 +89,11 @@
                 RefreshControllerInfo();
             }
             else if (event.target.id == "pageEditContact") {
+                $('#lblEditContactError').html("");
                 RefreshContactInfo();
             }
             else if (event.target.id == "pageEditAccountAddress") {
+                $('#lblEditAccountAddressError').html("");
                 RefreshAccountAddress();
             }
         }
