@@ -256,7 +256,8 @@ function NetworkSelected(index) {
 function ConfigureOther() {
 
     $("#dlgOther").popup("close");
-
+    $('#dlgOther-popup').hide();
+    
     var ssid = $('#txtOtherSSID').val();
     var sec = $('#selSecurity').val();
     var key = $('#txtKey').val();
@@ -275,6 +276,8 @@ function ConfigureOther() {
 }
 
 function ConfigureNetwork() {
+
+    setTimeout( function() { $( '#dlgNetworkKey' ).popup( 'close' ); }, 100 );
 
     var ssid = controllerNetworks.networks[networkIndex].name;
     var key = $('#txtNetworkKey').val();
@@ -297,7 +300,6 @@ function ConfigureNetwork() {
         sec = "calc";
 
     Configure(ssid, sec, key);
-    $("#dlgNetworkKey").popup("close");
 
     return;
 }

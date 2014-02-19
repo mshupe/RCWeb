@@ -20,7 +20,17 @@
     function loadPage(url) {
         document.location.href = url;
     }
+
+    function configureClick() {
+        setTimeout(function () { ConfigureNetwork(); }, 100);
+        return false;
+    }
     
+    function configureOtherClick() {
+        setTimeout(function () { ConfigureOther(); }, 100);
+        return false;
+    }
+
     $(document).bind("mobileinit", function () {
         $.mobile.defaultPageTransition = 'none';
     });
@@ -106,7 +116,8 @@
 
 	<div class="content" align="center">
 	    <form>
-            <div style="padding:10px 20px;" class="ui-body ui-body-c ui-corner-all">
+	    <p />
+	    <div style="padding:10px 20px;" class="ui-body ui-body-c ui-corner-all">
     		    <div id="divGetNetworks" class="no-ellipses">
                     <h3>Connect RainCommander to your WIFI network</h3>
                     <h4>Step 1) Go to your device's WiFi settings and select "RC SETUP"</h4>
@@ -141,7 +152,7 @@
             </div>
             <label for="txtKey">Network Key:</label>
             <input type="text" id="txtKey" value="" />
-		    <a data-role="button" data-inline="true" data-theme="b" onclick="ConfigureOther()">Configure</a>
+            <a data-role="button" data-inline="true" href="#" data-history="false" data-theme="b" onclick="configureOtherClick();">Configure</a>
         </form>
     </div>
     <div id="dlgNetworkKey" data-role="popup" data-theme="a" class="ui-corner-all" style="padding:10px 20px;">
@@ -149,7 +160,7 @@
             <label id="lblNetworkKeyError"></label>
             <label for="txtKey">Network Key:</label>
             <input type="text" id="txtNetworkKey" value="" autocapitalize="off" />
-		    <a data-role="button" data-inline="true" data-theme="b" onclick="ConfigureNetwork()">Configure</a>
+            <a data-role="button" data-inline="true" href="#" data-history="false" data-theme="b" onclick="configureClick();">Configure</a>
         </form>
     </div>
 </div>
