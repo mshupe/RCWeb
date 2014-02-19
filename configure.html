@@ -20,6 +20,11 @@
     function loadPage(url) {
         document.location.href = url;
     }
+
+    function configureClick() {
+        ConfigureNetwork();
+        return false;
+    }
     
     $(document).bind("mobileinit", function () {
         $.mobile.defaultPageTransition = 'none';
@@ -151,7 +156,7 @@
             <label for="txtKey">Network Key:</label>
             <input type="text" id="txtNetworkKey" value="" autocapitalize="off" />
 		    <a data-role="button" data-inline="true" href="#" data-history="false" data-theme="b" onclick="ConfigureNetwork()">Configure</a>
-		    <button onclick="ConfigureNetwork()" data-theme="b">Configure</button>
+		    <button onclick="return configureClick();" data-theme="b">Configure</button>
         </form>
     </div>
 </div>
