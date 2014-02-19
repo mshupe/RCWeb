@@ -277,7 +277,7 @@ function ConfigureOther() {
 
 function ConfigureNetwork() {
 
-    $("#dlgNetworkKey").popup("close");
+    setTimeout( function() { $( '#dlgNetworkKey' ).popup( 'close' ); }, 100 );
 
     var ssid = controllerNetworks.networks[networkIndex].name;
     var key = $('#txtNetworkKey').val();
