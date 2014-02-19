@@ -276,6 +276,8 @@ function ConfigureOther() {
 
 function ConfigureNetwork() {
 
+    $("#dlgNetworkKey").popup("close");
+
     var ssid = controllerNetworks.networks[networkIndex].name;
     var key = $('#txtNetworkKey').val();
     var sec = "no";
@@ -297,7 +299,6 @@ function ConfigureNetwork() {
         sec = "calc";
 
     Configure(ssid, sec, key);
-    $("#dlgNetworkKey").popup("close");
 
     return;
 }
