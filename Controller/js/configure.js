@@ -256,7 +256,8 @@ function NetworkSelected(index) {
 function ConfigureOther() {
 
     $("#dlgOther").popup("close");
-
+    $('#dlgOther-popup').hide();
+    
     var ssid = $('#txtOtherSSID').val();
     var sec = $('#selSecurity').val();
     var key = $('#txtKey').val();
