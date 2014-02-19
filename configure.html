@@ -22,7 +22,7 @@
     }
 
     function configureClick() {
-        ConfigureNetwork();
+        setTimeout(function () { ConfigureNetwork(); }, 100);
         return false;
     }
     
@@ -155,7 +155,7 @@
             <label id="lblNetworkKeyError"></label>
             <label for="txtKey">Network Key:</label>
             <input type="text" id="txtNetworkKey" value="" autocapitalize="off" />
-		    <a data-role="button" data-inline="true" href="#" data-history="false" data-theme="b" onclick="ConfigureNetwork()">Configure</a>
+		    <a data-role="button" data-inline="true" href="#" data-history="false" data-theme="b" onclick="configureClick();">Configure</a>
 		    <button onclick="return configureClick();" data-theme="b">Configure</button>
         </form>
     </div>
